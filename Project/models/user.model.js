@@ -51,6 +51,7 @@ const User = db.define('user', {
             notEmpty: {msg: 'Password can not be empty'},  
         }
     },
+   
 }, { freezeTableName: true,  timestamps: false})
 
 module.exports = User;

@@ -1,4 +1,5 @@
 const auth = require('../middleware/auth')
+const  authJwt = require('../middleware/auth')
 const userController = require('../controller/user.controller')
 
 const express = require('express');
@@ -12,36 +13,15 @@ module.exports = function(app) {
     app.get('/user/all', userController.findAll)
     app.get('/user/find/:userId', userController.findByPk)
     app.put('/user/update/:userId', userController.update)
-    
 
+    
+    app.put('/user/updateByToken/', userController.updateByToken)  //Update using token
+
+   app.get('/user/getAllWithAuth',auth, userController.getAllwithAuth) //Get users list (with authentication)
+
+   app.delete('/user/delete/:userId', userController.delete)
+   app.delete('/user/deleteByToken/', userController.deleteByToken) //Delete using token
+   
+    
 }
 
-
-
-
-
-
-
-//=========================================
-// module.exports = function(app){
-    
-//     const users = require('../controller/user.controller')
-
-//     //Retrive all user
-//     app.get('/api/users', users.findAll);
-
-//     //Retrive a single user by id
-//     app.get('/api/users/:userId', users.findByPk);
-
-//     //Update user with id
-//     app.put('/api/users/:userId', auth, users.update);
-
-//     //Delete user with id
-//     app.delete('/api/users/:userId', auth, users.delete);
-
-//     //User signup
-//     app.post('/api/user/signup', users.signup);
-
-//     //Usersignin
-//     app.post('/api/user/signin', users.signin);
-// }

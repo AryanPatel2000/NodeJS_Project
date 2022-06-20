@@ -1,5 +1,6 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
+const User = require('../models/user.model')
 
 //const db = require('../config/db.config');
 
@@ -21,4 +22,12 @@ verifyToken = (req, res, next) => {
     })
 }
 
+
 module.exports = verifyToken;
+
+
+// const authJwt = {
+//     verifyToken : verifyToken,
+//     getAllWithAuth: getAllWithAuth
+   
+// };
