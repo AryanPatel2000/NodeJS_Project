@@ -23,74 +23,94 @@ module.exports.signUp = (req, res) => {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 city: req.body.city,
-                password: bcrypt.hashSync(req.body.password, 8)
+                password: req.body.password
+               // password: bcrypt.hashSync(req.body.password, 8)
             })
             .then(user => { res.status(200).send({message: "User was registered successfully!", res:user})})
             
             .catch( err => { res.status(500).send({message: err.message})});
         }
     });
+   
 }
 
 module.exports.findAll = (req, res) => {
-    User.findAndCountAll({attributes: {exclude: ['password']}})
-    .then(users => {
-        res.status(200).send({status:'Success',message:'Record', res:users})
-    })
-    .catch(err => {
 
-        res.send({status:'Failed!',message:'Error Occuring', error: err})
-    })
+    try{
+        User.findAndCountAll({attributes: {exclude: ['password']}})
+        .then(users => {
+            if(users)
+             return res.status(200).send({status:'Success',message:'Record', res:users})
+             else{
+                 return res.status(500).send({status:'Failed!', message:'Data not found'})
+             }
+        })
+
+       
+    }
+    catch(err)
+    {
+        res.status(500).send({status:'Failed!', message:'Error ocuuring while fetching records'})
+    }
+   
 }
 
 
 module.exports.findByPk = (req, res) => {
 
-    User.findByPk(req.params.userId, { attributes: {exclude: ['password']}})
+    try{
 
-    .then( (user) => {
+        const id = req.params.userId
+        User.findByPk(id, { attributes: {exclude: ['password']}})
+        .then( (user) => {
 
-        if(user)
-        {
-            res.status(200).send({status:'Success', message:'record found' ,res:user})
-        }
-        else{
-            res.status(500).send({status:"fail",message:'Id not found'})
-        }   
-        
-     })
-    .catch( (error) => {
+            if(user)
+            {
+                return res.status(200).send({status:'Success', message:'Record found' ,res:user})
+            }
+            else
+            {
+                return res.status(500).send({status:"Failed!",message:`${id} id you entered is not valid`})
+            }
+        })
+    }
+    catch( err)
+    {
+        return res.status(500).send({status:"Failed!",message: 'Error occuring while fetching record', error:err})
+    }
 
-        res.status(500).send({status:"fail",message:'Error occuring while fetching record', error:error.message})
-    })
  
 }
 
 module.exports.update = async(req, res) => {
 
-   const id = req.params.userId;
-   await  User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city} , 
-            {where : {id: req.params.userId}}
-        ) 
-        .then( (user) => {
+
+    try{
+       const id = req.params.userId;
            
-            if(user)
-            {
-                return res.status(200).send({status:'Success', message: 'user updated successfully with id = ' + id });
-            }
-            else
-            {
-                return res.status(500).send({status: 'Failed', message: 'User id not found'})
-            }
-                 
-        })
-        .catch(err => {
+               await  User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city} , 
+                        {where : {id: req.params.userId}},
+                       
+                    ) 
+                    .then( (user) => {
+                       
+                        if(user)
+                        {
+                            return res.status(200).send({status:'Success', message: 'user updated successfully with id = ' + id });
+                        }
+                        else
+                        {
+                            return res.status(500).send({status: 'Failed', message: 'User id not found'})
+                        }
+                             
+                    })
 
-            console.log(error)
+    }
+    catch( err )
+    {
+        res.status(500).send({status:'Failed', message:'Error occuring while updating records'})
+    }
 
-            res.status(403).send({status:'Failed!', message: 'Id not found...', error:err})
-
-        });
 }
 
 module.exports.updateByToken = (req, res) => {
@@ -192,7 +212,7 @@ module.exports.signIn = (req, res) => {
             );
 
             if(!passwordIsValid){
-                res.status(401).send({accessToken: null, message: 'Invalid password!'})
+                return res.status(401).send({accessToken: null, message: 'Invalid password!'})
             }
 
             let token = jwt.sign({id: user.id}, process.env.secret, {
@@ -210,7 +230,7 @@ module.exports.signIn = (req, res) => {
         }
     })
     .catch( err => {
-        res.status(500).send({ error:true,message: err });
+        res.send({status:'Failed!',message:'error occuring while matching data',error:err})
     })
 }
 

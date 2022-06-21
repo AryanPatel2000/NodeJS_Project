@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db.config')
+const bcrypt = require('bcryptjs')
 
 const User = db.define('user', {
     id: {
@@ -52,7 +53,19 @@ const User = db.define('user', {
         }
     },
    
-}, { freezeTableName: true,  timestamps: false})
+}, { freezeTableName: true,  timestamps: false ,
+ 
+    //for hashing password
+    hooks:{
+        beforeCreate :(user, options) => {
+            return bcrypt.hash(user.password, 10)
+            .then( hash => {
+                user.password = hash;
+            })
+            .catch( (err => {console.log(err)}))
+        }
+    }
+})
 
 module.exports = User;
 
