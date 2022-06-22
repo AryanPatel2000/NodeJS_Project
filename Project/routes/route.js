@@ -23,11 +23,18 @@ module.exports = function(app) {
    app.get('/user/getAllWithAuth',auth, userController.getAllwithAuth) //Get users list (with authentication)
 
    app.delete('/user/delete/:userId', userController.delete)
+
    app.delete('/user/deleteByToken/', userController.deleteByToken) //Delete using token
+
+
    
    app.post('/item/add', itemController.addItem) //add item in item table
+
    app.get('/item/getAll/', itemController.getAll) //get all  for item
+
    app.get('/item/filterAndSearch', itemController.filterAndSearch) // filter and search
+
+   app.get('/item/pagination', itemController.itemPagination) // item pagination
 
    app.post('/order/createOrder', orderController.createOrder) // create Order
 

@@ -1,7 +1,8 @@
 require('dotenv').config();
-const {Sequelize, Op} = require('sequelize')
+const {Sequelize, Op, QueryTypes} = require('sequelize')
 const jwt = require('jsonwebtoken');
 const db = require('../config/db.config');
+
 const Item = require('../models/item.model')
 
 module.exports.addItem = (req, res, next) => {
@@ -63,19 +64,89 @@ module.exports.getAll = (req, res) => {
 }
 
 module.exports.filterAndSearch = async(req, res) => {
+
+        const query = req.query;
+        console.log('Searching: ', query)
+      try{
+        Item.findAll({
+            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+            where: req.query 
+          })
+            .then(results => {
+  
+                res.status(200).send({status:'Success', message: `Record found`, totalItems: results.length, res: results});                            
+                console.log('Records found: ', JSON.stringify(results,null, 2))
+            })
+            .catch(error => {
+              console.log(error);
+              res.status(500).send({ message: "Error occuring while fetching records!",error: error });
+            });
+      }
+      catch( error)
+      {
+        res.status(500).send({ message: "Error", error: error });
+        
+      }
+
+}
+
+module.exports.itemPagination = async(req, res) => {
+     
+    
+    const page = parseInt(req.query.page)  ;
+    const limit = parseInt(req.query.limit) ;
+
+    const offset = page ? page * limit : 0 ;
+   // console.log('Offset: ', offset)
    
-    const filters = req.query;
-    const filteredItems = Item.filter( item => {
+    if(!limit || limit === undefined )
+    {
+        
 
-        let isValid = true;
+        let result = await Item.findAndCountAll({
+            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+            limit: 5 ,    
+            offset: page , 
 
-        for(key in filters){
-            console.log(key, item[key], filters[key]);
+        })   
 
-            isValid = isValid && item[key] == item[key]
+        const totalPages = Math.ceil(result.count / 5);
+
+       // console.log("Total pages: ", totalPages)
+
+        const response = {
+            "totalPages": totalPages,
+            "pageNumber" : page,
+            "pageSize": result.rows.length,
+            "Items" : result.rows ,
+
         }
-        return isValid
-    })
 
-    res.status(200).send({status:'Success',message:'Item found', res:filteredItems})
+        return res.status(200).send({status:'Success', res:response})
+    }
+
+    
+    let result = {};
+     
+        result = await Item.findAndCountAll({
+            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+            
+            limit : limit ,
+            offset: offset,          
+           
+        })
+    const totalPages = Math.ceil(result.count / limit);
+
+        console.log("Total pages: ", totalPages)
+
+        const response = {
+            "totalPages": totalPages,
+            "pageNumber" : page,
+            "pageSize": result.rows.length,
+            "Items" : result.rows ,
+
+        }
+
+        res.status(200).send({status:'Success', res:response})
+
 }
