@@ -1,19 +1,20 @@
 const express = require('express');
-
+const { Sequelize } = require('sequelize');
 const bodyParser = require('body-parser');
 const path = require('path')
 
 const app = express();
 app.use(express.json());
-//app.use(bodyParser.json());
+
 app.use(bodyParser.urlencoded({extended:true}))
 
 const db = require('./config/db.config')
 
 const User = require('./models/user.model')
-const Item = require('./models/item.model')
 const Order = require('./models/order.model')
+const Item = require('./models/item.model')
 const Mfg = require('./models/mfg.model')
+
 
 // Mfg.sync({force:true})
 //     .then( () => {

@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize');
 const db = require('../config/db.config')
 
+const User = require('./user.model')
+const Item = require('./item.model')
 
 const Order = db.define('order', {
 
@@ -16,7 +18,8 @@ const Order = db.define('order', {
     },
     userId: {
         type: Sequelize.INTEGER,
-        allowNull:false
+        allowNull:false,
+        
     },
     itemId: {
         type:Sequelize.INTEGER,
@@ -31,4 +34,8 @@ const Order = db.define('order', {
 
 
 module.exports = Order;
+
+Order.belongsTo(User, {foreignKey:'userId'})
+
+Order.belongsTo(Item, {foreignKey: 'itemId'})
 

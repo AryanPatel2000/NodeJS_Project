@@ -1,10 +1,13 @@
 const auth = require('../middleware/auth');
-const  authJwt = require('../middleware/auth');
+const  ensureAuthorized = require('../middleware/auth');
 const userController = require('../controller/user.controller');
 const itemController = require('../controller/item.controller');
 const orderController = require('../controller/order.controller');
 const mfgController = require('../controller/mfg.controller');
 
+const jwt = require('jsonwebtoken')
+require('dotenv')
+const Order = require('../models/order.model')
 const express = require('express');
 var router = express.Router();
 
@@ -36,10 +39,17 @@ module.exports = function(app) {
 
    app.get('/item/pagination', itemController.itemPagination) // item pagination
 
-   app.post('/order/createOrder', orderController.createOrder) // create Order
+   app.get('/item/sortExpDate', itemController.sortExpDate) //Sorting based on Date, "expiryDate" 
 
+   app.post('/order/createOrder', auth , orderController.createOrder) // create Order
+
+   app.get('/order/viewMyOrders' ,auth,  orderController.viewMyOrders) // view my orders using auth 
+
+   app.get('/order/showAllOrder',auth, orderController.showAllOrders) // show all order
 
    app.post('/mfg/createMfg', mfgController.createMfg) //create mfg
-    
-}
+   
 
+   
+
+}

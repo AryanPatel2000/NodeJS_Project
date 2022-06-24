@@ -67,6 +67,7 @@ module.exports.filterAndSearch = async(req, res) => {
 
         const query = req.query;
         console.log('Searching: ', query)
+        
       try{
         Item.findAll({
             attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
@@ -106,7 +107,7 @@ module.exports.itemPagination = async(req, res) => {
         let result = await Item.findAndCountAll({
             attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
             limit: 5 ,    
-            offset: page , 
+            offset: 0  , 
 
         })   
 
@@ -117,7 +118,7 @@ module.exports.itemPagination = async(req, res) => {
         const response = {
             "totalPages": totalPages,
             "pageNumber" : page,
-            "pageSize": result.rows.length,
+            "pageSize": result.rows.length ,
             "Items" : result.rows ,
 
         }
@@ -150,3 +151,93 @@ module.exports.itemPagination = async(req, res) => {
         res.status(200).send({status:'Success', res:response})
 
 }
+
+
+module.exports.sortExpDate = async(req, res) => {
+
+
+    try{
+      
+        let dateSorting = (req.query.dateSorting === 'true')
+      
+        let desc = (req.query.desc === 'true');
+              
+        let result = {};   
+
+               if(dateSorting == false && desc == false){
+                    result = await Item.findAndCountAll({
+                        attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+
+                      });
+
+                      return res.send({status:'Success..',message:'With no sorting',res:result})
+                } 
+                else if(dateSorting == true && desc ==false)
+                    {
+                        result = await Item.findAndCountAll({
+                            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                
+                            order: [
+                                ['exp_date', 'ASC']
+                            ]             
+                        });
+                        return res.send({status:'Success..',message:'Sorting exp_date with Ascending order',res:result})
+
+                    }
+                    else if(dateSorting == true && desc ==true)
+                    {
+                        result = await Item.findAndCountAll({
+                            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                
+                            order: [
+                                ['exp_date', 'DESC']
+                            ]             
+                        });
+                        return res.send({status:'Success..',message:'Sorting exp_date with Descending order',res:result})
+
+                    }
+                    else if(desc == true)
+                    {
+                        result = await Item.findAndCountAll({
+                            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                
+                            order: [
+                                ['exp_date', 'DESC']
+                            ]             
+                        });
+                       
+                    }
+         
+                else { 
+                    result = await Item.findAndCountAll({
+
+                        attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                  
+                      order: [
+                            ['exp_date', 'DESC']
+                      ]             
+                    });
+                  }
+  
+        const response = {
+       
+          "pageSize": result.rows.length,
+          "Items": result.rows
+        };
+
+        res.status(200).send({status:'Success',res:response});
+
+      }catch(error) {
+        res.status(500).send({
+
+          message: "Error -> Can NOT complete request!",
+          error: error.message,
+
+        });
+      }      
+
+
+}
+
+
+

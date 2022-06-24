@@ -23,6 +23,7 @@ module.exports.signUp = (req, res) => {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 city: req.body.city,
+                role: req.body.role,
                 password: req.body.password
                // password: bcrypt.hashSync(req.body.password, 8)
             })
@@ -88,8 +89,8 @@ module.exports.update = async(req, res) => {
     try{
        const id = req.params.userId;
            
-               await  User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city} , 
-                        {where : {id: req.params.userId}},
+               await  User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city, role: req.body.role} , 
+                        {where : {userId: req.params.userId}},
                        
                     ) 
                     .then( (user) => {
@@ -130,13 +131,14 @@ module.exports.updateByToken = (req, res) => {
         req.userId = decoded.id;
     })
     const id = req.userId;
-    User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city} , 
-        {where : {id: req.userId}}
+    User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city ,role: req.body.role} , 
+        {where : {userId: req.userId}}
         )
         .then( () => {
             res.status(200).send({ message: 'user updated successfully with id = ' + id });
         })
         .catch(err => {
+            console.log(err)
             res.status(500).send({error:true, message:err})
         });
  
@@ -148,7 +150,7 @@ module.exports.delete = (req, res) => {
 
 
     const id = req.params.userId;
-    User.destroy({ where: {id: id}})
+    User.destroy({ where: {userId: id}})
     .then( (user) => {
       
         if(user)
@@ -189,7 +191,8 @@ module.exports.deleteByToken = (req, res) => {
         res.status(200).send({ message: 'user deleted successfully with id = ' + id });
     })
     .catch(err => {
-        res.status(401).send({message: 'Id not found', error:err})
+        console.log(err)
+        res.status(500).send({message: 'Id not found', error:err})
     });
  
 
@@ -220,8 +223,9 @@ module.exports.signIn = (req, res) => {
             });
 
             res.status(200).send({
-                id: user.id,
+                userId: user.id,
                 email: user.email,
+                role:user.role,
                 firstName: user.firstName,
                 lastName:user.lastName,               
                 accessToken: token,

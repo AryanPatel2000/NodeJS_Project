@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize')
 const db = require('../config/db.config')
+const Mfg = require('./mfg.model')
 
 const Item = db.define('item', {
     itemId: {
@@ -52,4 +53,8 @@ const Item = db.define('item', {
 }, { freezeTableName: true,  timestamps: false })
 
 module.exports = Item;
+
+Item.belongsTo(Mfg, {foreignKey:'mfg_Id'})
+
+
 

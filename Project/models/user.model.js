@@ -3,7 +3,7 @@ const db = require('../config/db.config')
 const bcrypt = require('bcryptjs')
 
 const User = db.define('user', {
-    id: {
+    userId: {
         type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true
@@ -44,6 +44,18 @@ const User = db.define('user', {
            
         },   
     },
+    role: {
+        type: Sequelize.ENUM,
+        values: ['Admin','Manufacturer','Customer'],
+        defaultValue: 'Customer',
+
+        validate: {
+            isIn: {
+                args: [['Admin', 'Manufacturer', 'Customer']],
+                msg: 'Role must be Admin or Manufacturer or Customer'
+            }
+        }
+      },
     password: {
         type: Sequelize.STRING,
         allowNull: false,
@@ -67,5 +79,9 @@ const User = db.define('user', {
     }
 })
 
+
 module.exports = User;
+
+
+
 
