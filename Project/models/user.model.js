@@ -44,18 +44,7 @@ const User = db.define('user', {
            
         },   
     },
-    role: {
-        type: Sequelize.ENUM,
-        values: ['Admin','Manufacturer','Customer'],
-        defaultValue: 'Customer',
 
-        validate: {
-            isIn: {
-                args: [['Admin', 'Manufacturer', 'Customer']],
-                msg: 'Role must be Admin or Manufacturer or Customer'
-            }
-        }
-      },
     password: {
         type: Sequelize.STRING,
         allowNull: false,

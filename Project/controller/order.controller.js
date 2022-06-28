@@ -4,10 +4,12 @@ const db = require('../config/db.config');
 const Order = require('../models/order.model')
 const Item = require('../models/item.model')
 const User = require('../models/user.model')
-
+const Role = require('../models/role.model')
+const { sequelize, QueryTypes } = require('sequelize');
 
 module.exports.createOrder = (req, res, next) => {
 
+    
     try{
 
         Order.create({
@@ -35,7 +37,8 @@ module.exports.createOrder = (req, res, next) => {
 }
 
 
-module.exports.viewMyOrders = (req, res) => {
+module.exports.viewMyOrders = async(req, res, next) => {
+
 
     const query = req.query;
     console.log('Searching: ', query)
@@ -70,6 +73,7 @@ module.exports.viewMyOrders = (req, res) => {
 
 module.exports.showAllOrders = (req, res) => {
 
+ 
     try{
        
         Order.findAll({})
@@ -93,5 +97,32 @@ module.exports.showAllOrders = (req, res) => {
     {
         res.status(500).send({message:"Something went wrong", error:err})
     }
+
+
+    //================
+
+    // try{
+       
+    //     Order.findAll({})
+
+    //     .then(order => {
+
+    //        res.status(200).json({
+    //                 message: "All orders " ,
+    //                 Total_order: order.length,
+    //                 orders: order,
+                        
+    //             });        
+           
+    //     })
+    //     .catch(error => {
+    //         console.log(error)
+    //         res.status(500).json({message:`Order not found` , error: error });
+    //     });
+    // }
+    // catch(err)
+    // {
+    //     res.status(500).send({message:"Something went wrong", error:err})
+    // }
 
 }

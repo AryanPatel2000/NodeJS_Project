@@ -1,5 +1,5 @@
 const express = require('express');
-const { Sequelize } = require('sequelize');
+const  Sequelize  = require('sequelize');
 const bodyParser = require('body-parser');
 const path = require('path')
 
@@ -14,7 +14,30 @@ const User = require('./models/user.model')
 const Order = require('./models/order.model')
 const Item = require('./models/item.model')
 const Mfg = require('./models/mfg.model')
+const Role = require('./models/role.model');
 
+
+Role.sync()
+    .then( () => {
+        console.log('Resync DB');
+      //initial();
+})
+
+function initial(){
+    Role.create({
+        id: 1,
+        name: 'Admin'
+    });
+    Role.create({
+        id: 2,
+        name: 'Manufacturer'
+    });
+    Role.create({
+        id: 3,
+        name: 'Customer'
+    });
+
+}
 
 // Mfg.sync({force:true})
 //     .then( () => {
@@ -38,7 +61,7 @@ const Mfg = require('./models/mfg.model')
 //     console.log('Resync Db')
 // })
 
-
+require('./routes/auth.route')(app);
 require('./routes/route')(app)
 
 const port = process.env.PORT || 5000

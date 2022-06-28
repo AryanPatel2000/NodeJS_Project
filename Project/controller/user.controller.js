@@ -1,8 +1,9 @@
 require('dotenv').config();
+const {Sequelize, Op} = require('sequelize')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db.config');
-
+const Role = require('../models/role.model')
 const User = require('../models/user.model')
 
 module.exports.signUp = (req, res) => {
@@ -11,8 +12,8 @@ module.exports.signUp = (req, res) => {
         where: {
             email: req.body.email
         }
-    }).then( user => {
-        if(user)
+    }).then( email => {
+        if(email)
         {
             res.status(400).send({message: "Email is already in use!",})
         }
@@ -23,13 +24,34 @@ module.exports.signUp = (req, res) => {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 city: req.body.city,
-                role: req.body.role,
                 password: req.body.password
                // password: bcrypt.hashSync(req.body.password, 8)
             })
-            .then(user => { res.status(200).send({message: "User was registered successfully!", res:user})})
+
+            .then(user => {
+                if (req.body.roles) {
+                  Role.findAll({
+                    where: {
+                      name: {
+                        [Op.or]: req.body.roles
+                      }
+                    }
+                  }).then(roles => {
+                    user.setRoles(roles).then(() => {
+                      res.send({ message: "User was registered successfully!" });
+                    });
+                  });
+                } else {
+                  // customer role = 3
+                  user.setRoles([3]).then(() => {
+                    return res.send({ message: "User was registered successfully!", res:user });
+                  });
+                }
+              })
+              .catch(err => {
+                res.status(500).send({ message: err.message });
+              });
             
-            .catch( err => { res.status(500).send({message: err.message})});
         }
     });
    
@@ -37,7 +59,9 @@ module.exports.signUp = (req, res) => {
 
 module.exports.findAll = (req, res) => {
 
+
     try{
+
         User.findAndCountAll({attributes: {exclude: ['password']}})
         .then(users => {
             if(users)
@@ -200,43 +224,47 @@ module.exports.deleteByToken = (req, res) => {
 
 module.exports.signIn = (req, res) => {
     User.findOne({
-        where: {
-            email: req.body.email
+      where: {
+        email: req.body.email
+      }
+    })
+      .then(user => {
+        if (!user) {
+          return res.status(404).send({ message: "User Not found." });
         }
-    })
-    .then( user => {
-        if(!user)
-        {
-            res.status(404).send({message: "Invalid Email!"});
-        }else{
-            let passwordIsValid = bcrypt.compareSync(
-                req.body.password,
-                user.password
-            );
-
-            if(!passwordIsValid){
-                return res.status(401).send({accessToken: null, message: 'Invalid password!'})
-            }
-
-            let token = jwt.sign({id: user.id}, process.env.secret, {
-                expiresIn: 86400 // 24 hours * 3600 seconds -> (1 hour)
-            });
-
-            res.status(200).send({
-                userId: user.id,
-                email: user.email,
-                role:user.role,
-                firstName: user.firstName,
-                lastName:user.lastName,               
-                accessToken: token,
-
-            })
+        var passwordIsValid = bcrypt.compareSync(
+          req.body.password,
+          user.password
+        );
+        if (!passwordIsValid) {
+          return res.status(401).send({
+            accessToken: null,
+            message: "Invalid Password!"
+          });
         }
-    })
-    .catch( err => {
-        res.send({status:'Failed!',message:'error occuring while matching data',error:err})
-    })
-}
+        var token = jwt.sign({ id: user.id }, process.env.secret, {
+          expiresIn: 86400 // 24 hours
+        });
+        var authorities = [];
+        user.getRoles().then(roles => {
+          for (let i = 0; i < roles.length; i++) {
+            authorities.push("ROLE_" + roles[i].name.toUpperCase());
+          }
+          res.status(200).send({
+       
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName:user.lastName,   
+            roles: authorities,
+            accessToken: token
+          });
+        });
+      })
+      .catch(err => {
+        res.status(500).send({ message: err.message });
+      });
+  };
 
 module.exports.getAllwithAuth = (req, res) => {
 

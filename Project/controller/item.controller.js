@@ -93,7 +93,6 @@ module.exports.filterAndSearch = async(req, res) => {
 
 module.exports.itemPagination = async(req, res) => {
      
-    
     const page = parseInt(req.query.page)  ;
     const limit = parseInt(req.query.limit) ;
 
@@ -103,13 +102,13 @@ module.exports.itemPagination = async(req, res) => {
     if(!limit || limit === undefined )
     {
         
-
         let result = await Item.findAndCountAll({
             attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
             limit: 5 ,    
             offset: 0  , 
 
         })   
+        
 
         const totalPages = Math.ceil(result.count / 5);
 
@@ -235,7 +234,6 @@ module.exports.sortExpDate = async(req, res) => {
 
         });
       }      
-
 
 }
 
