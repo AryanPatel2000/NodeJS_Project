@@ -29,7 +29,6 @@ verifyToken = (req, res, next) => {
 
 
 
-
 isAdmin = async(req, res, next) => {
     
    User.findByPk(1)
@@ -92,12 +91,16 @@ isAdmin = async(req, res, next) => {
     });
   };
 
+
+
   const authJwt = {
     
     verifyToken: verifyToken,
     isAdmin: isAdmin,
     isManufacturer: isManufacturer,
     isCustomer:isCustomer,
+    //OrderPage:OrderPage
+   
     
   };
 

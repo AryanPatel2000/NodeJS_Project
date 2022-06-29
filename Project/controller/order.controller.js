@@ -5,35 +5,46 @@ const Order = require('../models/order.model')
 const Item = require('../models/item.model')
 const User = require('../models/user.model')
 const Role = require('../models/role.model')
+const authJwt = require('../middleware/auth')
 const { sequelize, QueryTypes } = require('sequelize');
 
 module.exports.createOrder = (req, res, next) => {
 
-    
-    try{
 
-        Order.create({
-            			
-                   orderDate:req.body.orderDate || Date.now(),
-                   userId:req.body.userId,
-                   itemId:req.body.itemId,
-                   status:req.body.status,                  
-            })  
-        .then( (order) => {
-            if(order)
-             return res.status(200).send({ststus:'Success', message:`order successfull inserted with id: ${order.orderId}`, res:order})
+    let order = {}
 
-        })
-        .catch( (err)=> {
-            res.status(500).send({status:'Failed!', message: err.message})
-        } )
+    try{ 
+
+        order.orderDate = req.body.orderDate || Date.now(),
+        order.userId = req.body.userId,
+        order.itemId = req.body.itemId,
+        order.status = 'Ordered' 
+
+        Item.findByPk(req.body.itemId)
+        .then( result => {
+            console.log(result.exp_date, new Date())
+         
+        if( new Date(result.exp_date)  <= new Date())
+        {   
+           return res.status(500).send({Order:'Failed!',message:`Order can't be placed because of item is out of expiry date : ${result.exp_date} `})
+        }
+        else
+        {
+            Order.create(order)
+            .then(ordered => {
+                return res.status(200).send({Order:'Success', message:'Thank you for your order', res:ordered})
+            })
+        }
+    })
        
-
-    }catch(err)
-    {
-        res.status(500).send({status:'Failed!', message: err.message})
-        console.log(err)
     }
+    catch(err)
+    {
+        //console.log(err)
+        return res.status(500).send({Order:'Failed!', message:'Something went wrong while placing order', error:err.message})
+    }
+    
+    
 }
 
 
@@ -73,7 +84,7 @@ module.exports.viewMyOrders = async(req, res, next) => {
 
 module.exports.showAllOrders = (req, res) => {
 
- 
+  
     try{
        
         Order.findAll({})
@@ -99,30 +110,5 @@ module.exports.showAllOrders = (req, res) => {
     }
 
 
-    //================
-
-    // try{
-       
-    //     Order.findAll({})
-
-    //     .then(order => {
-
-    //        res.status(200).json({
-    //                 message: "All orders " ,
-    //                 Total_order: order.length,
-    //                 orders: order,
-                        
-    //             });        
-           
-    //     })
-    //     .catch(error => {
-    //         console.log(error)
-    //         res.status(500).json({message:`Order not found` , error: error });
-    //     });
-    // }
-    // catch(err)
-    // {
-    //     res.status(500).send({message:"Something went wrong", error:err})
-    // }
 
 }

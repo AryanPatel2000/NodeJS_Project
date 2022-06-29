@@ -1,5 +1,6 @@
 require('dotenv').config();
 const {Sequelize, Op} = require('sequelize')
+const authJwt = require('../middleware/auth')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db.config');
@@ -59,7 +60,7 @@ module.exports.signUp = (req, res) => {
 
 module.exports.findAll = (req, res) => {
 
-
+   
     try{
 
         User.findAndCountAll({attributes: {exclude: ['password']}})

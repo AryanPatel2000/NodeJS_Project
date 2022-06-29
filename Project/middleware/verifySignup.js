@@ -1,8 +1,9 @@
-
+require('dotenv').config()
 const db = require('../config/db.config')
 const Role = require('../models/role.model');
 const User = require('../models/user.model');
 const {Sequelize} = require('sequelize')
+const jwt = require('jsonwebtoken')
 
 checkDuplicateEmail = (req, res, next) => {
  
@@ -47,8 +48,36 @@ checkRolesExisted = (req, res, next) => {
     next();
   };
 
+
+validateToken = (req, res, next) => {
+
+  const authHeader = req.headers.authorization;
+   console.log('Token:' ,authHeader)
+    
+    if(authHeader)
+    {
+        const token = authHeader.split(' ')[1];
+
+        jwt.verify(token, process.env.secret, (err, user) => {
+            if (err) {
+                return res.status(403).send({message:'Invalide token'});
+            }
+            req.user = user;
+           
+            next()
+        })
+     
+    }else{
+        return res.status(401).send({message:'Unauthorized'});
+    }
+  }
+
+
+
   const verifySignUp = {
     checkDuplicateEmail: checkDuplicateEmail,
-    checkRolesExisted: checkRolesExisted
+    checkRolesExisted: checkRolesExisted,
+    validateToken:validateToken
+  
   };
   module.exports = verifySignUp;

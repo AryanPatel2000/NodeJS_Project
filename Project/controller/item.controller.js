@@ -2,35 +2,77 @@ require('dotenv').config();
 const {Sequelize, Op, QueryTypes} = require('sequelize')
 const jwt = require('jsonwebtoken');
 const db = require('../config/db.config');
-
+const role = require('../models/role.model')
 const Item = require('../models/item.model')
+const User = require('../models/user.model')
+
 
 module.exports.addItem = (req, res, next) => {
 
-    try{
+    const query = req.query.roles;
+    console.log('Searching: ', query)
 
-        Item.create({
-                   itemName:req.body.itemName,
-                   mfg_date:req.body.mfg_date,
-                   exp_date:req.body.exp_date,
-                   price:req.body.price,
-                   mfg_Id:req.body.mfg_Id,
-            })  
-        .then( (item) => {
-            if(item)
-             return res.status(200).send({ststus:'Success', message:`Item successfull inserted with id: ${item.itemId}`, res:item})
 
-        })
-        .catch( (err)=> {
-            res.status(500).send({status:'Failed!', message: err.message})
-        } )
-       
-
-    }catch(err)
+    if (req.query.roles === 'Customer') 
     {
-        res.status(500).send({status:'Failed!', message: err.message})
-        console.log(err)
+        return res.status(403).send({message:'Customer can not be insert new item'});
     }
+    else{
+        try{
+
+            Item.create({
+                       itemName:req.body.itemName,
+                       mfg_date:req.body.mfg_date,
+                       exp_date:req.body.exp_date,
+                       price:req.body.price,
+                       mfg_Id:req.body.mfg_Id,
+                })  
+            .then( (item) => {
+                if(item)
+                 return res.status(200).send({status:'Success', message:`Item successfull inserted with id: ${item.itemId}`, res:item})
+    
+            })
+            .catch( (err)=> {
+                res.status(500).send({status:'Failed!', message: err.message})
+            } )
+           
+    
+        }catch(err)
+        {
+            console.log(err)
+            return res.status(500).send({status:'Failed!', message: err.message})
+            
+        }
+    }
+    
+
+}
+
+module.exports.updateItem = (req, res, next) => {
+
+    const query = req.query;
+    console.log('Searching: ', query)
+
+    if (req.query.roles === 'Customer') 
+    {
+        return res.status(403).send({message:'Customer can not be update item'});
+    }
+    else{
+
+        // Item.update({itemName : req.body.itemName, mfg_date : req.body.mfg_date, exp_date: req.body.exp_date, price: req.body.price, mfg_Id: req.body.mfg_Id},
+            
+        //     { where: {itemId: req.params.id} }, (err, docs) => {
+        //     if(err) {
+                
+        //         res.status(500).send({status:'error', message:'Error occured while updating record into DB.', res:err});
+        //     }else{
+               
+        //         res.status(200).send({status:'Success', message:'Successfully updated the record', res:docs});
+        //     }
+        // })
+    }
+    
+
 }
 
 module.exports.getAll = (req, res) => {

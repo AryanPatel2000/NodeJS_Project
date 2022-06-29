@@ -39,11 +39,11 @@ module.exports = function(app) {
     );
 
 
-    app.get(
-      '/order/showAllOrder',
-      [authJwt.verifyToken, authJwt.isAdmin],
-      rolleController.showOrderToAdmin
-    )
+    // app.get(
+    //   '/order/showAllOrder',
+    //   [authJwt.verifyToken, authJwt.isAdmin],
+    //   rolleController.showOrderToAdmin
+    // )
 
 
     app.get(
