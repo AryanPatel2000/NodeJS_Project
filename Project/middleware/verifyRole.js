@@ -21,12 +21,8 @@ verifyToken = (req, res, next) => {
 }
 
 
-
-  
 const verifyRole = {
     verifyToken : verifyToken,
-   
-  
    
 };
 

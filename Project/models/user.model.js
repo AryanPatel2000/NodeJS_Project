@@ -53,6 +53,18 @@ const User = db.define('user', {
             notEmpty: {msg: 'Password can not be empty'},  
         }
     },
+    role: {
+       
+        type:  Sequelize.ENUM,
+        values: ['Admin', 'Manufacturer', 'Customer'],
+        validate: {
+            isIn: {
+                args: [['Admin', 'Manufacturer', 'Customer']],
+                msg: "Role must be Admin or Manufacturer or Customer"
+            }
+        }
+        
+    }
    
 }, { freezeTableName: true,  timestamps: false ,
  
@@ -67,7 +79,6 @@ const User = db.define('user', {
         }
     }
 })
-
 
 module.exports = User;
 

@@ -22,7 +22,7 @@ module.exports = function(app) {
       "/user/signUp",
       [
         verifySignUp.checkDuplicateEmail,
-        verifySignUp.checkRolesExisted
+        //verifySignUp.checkRolesExisted
       ],
       userController.signUp
     );
@@ -47,6 +47,7 @@ module.exports = function(app) {
 
 
     app.get(
+      
       "/api/test/customer",
       [authJwt.verifyToken, authJwt.isAdmin],
       rolleController.customerBoard

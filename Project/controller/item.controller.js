@@ -8,16 +8,7 @@ const User = require('../models/user.model')
 
 
 module.exports.addItem = (req, res, next) => {
-
-    const query = req.query.roles;
-    console.log('Searching: ', query)
-
-
-    if (req.query.roles === 'Customer') 
-    {
-        return res.status(403).send({message:'Customer can not be insert new item'});
-    }
-    else{
+       
         try{
 
             Item.create({
@@ -43,35 +34,65 @@ module.exports.addItem = (req, res, next) => {
             return res.status(500).send({status:'Failed!', message: err.message})
             
         }
-    }
+    
     
 
 }
 
-module.exports.updateItem = (req, res, next) => {
+module.exports.updateItem = async(req, res, next) => {
 
-    const query = req.query;
-    console.log('Searching: ', query)
+    try {
+             
+        let item = await Item.findByPk(req.query.itemId);
+ 
 
-    if (req.query.roles === 'Customer') 
-    {
-        return res.status(403).send({message:'Customer can not be update item'});
-    }
-    else{
-
-        // Item.update({itemName : req.body.itemName, mfg_date : req.body.mfg_date, exp_date: req.body.exp_date, price: req.body.price, mfg_Id: req.body.mfg_Id},
+        if (!item) {
             
-        //     { where: {itemId: req.params.id} }, (err, docs) => {
-        //     if(err) {
+            return res.status(404).send({
+                status:'Failed!',
+                message: "Item not found with id = " + req.query.itemId,
+           
+            });
+        } else {
+            
+            let updatedObject = {
+             
+                itemName : req.body.itemName, 
+                mfg_date : req.body.mfg_date, 
+                exp_date: req.body.exp_date,
+                price: req.body.price, 
+                mfg_Id: req.body.mfg_Id
+            }
+            
+            let result = await Item.update(updatedObject, { where: { itemId: req.query.itemId } });
+
+          
+            if (!result) {
+                res.status(500).send({
+
+                    message: "Can not update a Item with itemId : " + req.query.itemId,
+                   
+                });
+            }
+
+            res.status(200).send({
+
+                status:'Success',
+                message: "Item updated successfully with itemId : " + req.query.itemId,
                 
-        //         res.status(500).send({status:'error', message:'Error occured while updating record into DB.', res:err});
-        //     }else{
-               
-        //         res.status(200).send({status:'Success', message:'Successfully updated the record', res:docs});
-        //     }
-        // })
+            });
+        }
+
+    } catch (error) {
+
+        console.log(error)
+        res.status(500).send({
+            status:'Failed!',
+            message: "Error occuring while updating Item itemId = " + req.query.itemId,
+            error: error.message
+        });
     }
-    
+   
 
 }
 

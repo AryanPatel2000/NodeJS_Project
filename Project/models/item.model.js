@@ -28,12 +28,7 @@ const Item = db.define('item', {
     },
     exp_date: {
         type: Sequelize.DATEONLY,
-        allowNull: false,
-        validate: {
-            notNull: {msg: 'Item exp_date can not be null'},
-            notEmpty: {msg: 'Item exp_date can not be empty'},
-           
-        },   
+       
     },
     price: {
         type: Sequelize.INTEGER,

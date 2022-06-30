@@ -5,7 +5,7 @@ const User = require('../models/user.model')
 
 const Role = require('../models/role.model')
 const {Sequelize} = require('sequelize')
-
+const  userController = require('../controller/user.controller')
 
 verifyToken = (req, res, next) => {
     let token = req.headers['x-access-token'];
@@ -79,7 +79,8 @@ isAdmin = async(req, res, next) => {
     .then(user => {
       user.getRoles().then(roles => {
         for (let i = 0; i < roles.length; i++) {
-          if (roles[i].name === "Customer") {
+          if (roles[i].name === "Customer") 
+          {
             next();
             return;
           }
@@ -91,16 +92,81 @@ isAdmin = async(req, res, next) => {
     });
   };
 
+  checkRoles = async(req, res, next) => {
+     
+      const userId =  req.user
+      
+      var userDetails = await User.findOne({ where: { userId: userId } })
+  
+      console.log(userDetails)
+
+      if(req.user.role === 'Admin' || req.user.role === 'Manufacturer')
+      {
+           next();
+      }
+      else{
+
+        return res.status(401).send({status:'Failed!',message:"You dont have permission"})
+
+      }
+    
+    
+  }
+
+  UpdateOrderStatusforCustomer = async(req, res, next) => {
+    
+      
+    const userId =  req.user
+    
+    var userDetails = await User.findOne({ where: { userId: userId } })
+
+    console.log(userDetails)
+
+    if(req.user.role === 'Customer')
+    {
+         next();
+    }
+    else{
+
+      return res.status(401).send({status:'Failed!',message:"You dont have permission"})
+
+    }
+  
+  
+}
 
 
+authenticateJWT = (req, res, next) => {
+
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+        const token = authHeader.split(' ')[1];
+
+        jwt.verify(token, process.env.secret, (err, user) => {
+         
+            if (err) {
+              console.log(err)
+               return res.status(403).send({message:'Not valid token'});
+            }
+
+            req.user = user;
+            next();
+            console.log(user)
+        });
+    } else {
+      return res.status(403).send({message:'No token provided..'});
+    }
+};
   const authJwt = {
     
     verifyToken: verifyToken,
     isAdmin: isAdmin,
     isManufacturer: isManufacturer,
     isCustomer:isCustomer,
-    //OrderPage:OrderPage
-   
+    checkRoles:checkRoles,
+    UpdateOrderStatusforCustomer:UpdateOrderStatusforCustomer,
+    authenticateJWT:authenticateJWT   
     
   };
 

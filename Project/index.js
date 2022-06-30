@@ -20,27 +20,12 @@ const Mfg = require('./models/mfg.model')
 const Role = require('./models/role.model');
 
 
-Role.sync()
-    .then( () => {
-        console.log('Resync DB');
-      //initial();
-})
+// Role.sync({alter:true})
+//     .then( () => {
+//         console.log('Resync DB');
+//       //initial();
+// })
 
-function initial(){
-    Role.create({
-        id: 1,
-        name: 'Admin'
-    });
-    Role.create({
-        id: 2,
-        name: 'Manufacturer'
-    });
-    Role.create({
-        id: 3,
-        name: 'Customer'
-    });
-
-}
 
 // Mfg.sync({force:true})
 //     .then( () => {
@@ -59,7 +44,7 @@ function initial(){
 //     })
 
 
-// User.sync({force:true})
+// User.sync({alter:true})
 // .then( () => {
 //     console.log('Resync Db')
 // })

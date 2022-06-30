@@ -15,7 +15,7 @@ const Order = require('../models/order.model')
 const express = require('express');
 var router = express.Router();
 
-const passport = require('passport')
+
 
 module.exports = function(app) {
 
@@ -38,8 +38,22 @@ module.exports = function(app) {
    app.delete('/user/deleteByToken/', userController.deleteByToken) //Delete using token
 
 
-   app.post('/item/add',[verifySignUp.validateToken,], itemController.addItem) //add item in item table itemId
-   app.put('/item/updateItem/:id',[verifySignUp.validateToken,], itemController.updateItem) 
+    //API for add new item, can be access by Manufacturer or Admin only
+    app.post('/item/add',[
+       
+            authJwt.authenticateJWT,
+            authJwt.checkRoles
+        ], 
+        itemController.addItem) 
+
+
+        //API for update item, can be access by Manufacturer or Admin only
+    app.put('/item/updateItem/',[  
+
+            authJwt.authenticateJWT,
+            authJwt.checkRoles,
+
+        ], itemController.updateItem) 
 
    app.get('/item/getAll/', itemController.getAll) //get all  for item
 
@@ -61,10 +75,33 @@ module.exports = function(app) {
 
   
   app.get('/order/showAllOrder',[authJwt.verifyToken, authJwt.isAdmin], orderController.showAllOrders)
+
   
+    app.put('/order/update/status', 
+        [  
+            authJwt.authenticateJWT,
+            authJwt.checkRoles,
+           
+        ],
+         orderController.updateOrderStatus)
 
 
-   app.post('/mfg/createMfg', mfgController.createMfg) //create mfg
+         // update status customer => Ordered and Canceled
+         app.put('/order/update/status/customer', 
+            [
+           
+            authJwt.authenticateJWT,
+            authJwt.UpdateOrderStatusforCustomer,
+            
+
+            ],
+         orderController.updateOrderStatusByCustomer)
+
+
+
+    app.get('/order/show/invoice', orderController.generateInvoice)
+
+   app.post('/mfg/createMfg', mfgController.createMfg) //create mfg generateInvoice
    
 
   

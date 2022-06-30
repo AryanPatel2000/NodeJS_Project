@@ -8,53 +8,88 @@ const Role = require('../models/role.model')
 const User = require('../models/user.model')
 
 module.exports.signUp = (req, res) => {
-    //Check email
-    User.findOne({
-        where: {
-            email: req.body.email
-        }
-    }).then( email => {
-        if(email)
-        {
-            res.status(400).send({message: "Email is already in use!",})
-        }
-        else{
-        
-            User.create({
-                email : req.body.email,
-                firstName: req.body.firstName,
-                lastName: req.body.lastName,
-                city: req.body.city,
-                password: req.body.password
-               // password: bcrypt.hashSync(req.body.password, 8)
-            })
 
-            .then(user => {
-                if (req.body.roles) {
-                  Role.findAll({
-                    where: {
-                      name: {
-                        [Op.or]: req.body.roles
-                      }
-                    }
-                  }).then(roles => {
-                    user.setRoles(roles).then(() => {
-                      res.send({ message: "User was registered successfully!" });
-                    });
-                  });
-                } else {
-                  // customer role = 3
-                  user.setRoles([3]).then(() => {
-                    return res.send({ message: "User was registered successfully!", res:user });
-                  });
-                }
-              })
-              .catch(err => {
-                res.status(500).send({ message: err.message });
-              });
+  User.findOne({
+    where: {
+        email: req.body.email
+    }
+}).then( email => {
+    if(email)
+    {
+        res.status(400).send({message: "Email is already in use!",})
+    }
+    else{
+    
+        User.create({
+            email : req.body.email,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            city: req.body.city,
+            password: req.body.password,
+            role:req.body.role
+           // password: bcrypt.hashSync(req.body.password, 8)
+        })
+
+        .then(user => {
+            if (user) {
+
+              return res.send({ message: "User was registered successfully!", res:user });
+
+            } 
+          })
+          .catch(err => {
+            res.status(500).send({ message: err.message });
+          });
+        
+    }
+});
+    //Check email
+    // User.findOne({
+    //     where: {
+    //         email: req.body.email
+    //     }
+    // }).then( email => {
+    //     if(email)
+    //     {
+    //         res.status(400).send({message: "Email is already in use!",})
+    //     }
+    //     else{
+        
+    //         User.create({
+    //             email : req.body.email,
+    //             firstName: req.body.firstName,
+    //             lastName: req.body.lastName,
+    //             city: req.body.city,
+    //             password: req.body.password,
+    //            // password: bcrypt.hashSync(req.body.password, 8)
+    //         })
+
+    //         .then(user => {
+    //             if (req.body.roles) {
+    //               Role.findAll({
+    //                 where: {
+    //                   name: {
+    //                     [Op.or]: req.body.roles
+    //                   }
+    //                 }
+    //               }).then(roles => {
+    //                 user.setRoles(roles).then(() => {
+    //                   res.send({ message: "User was registered successfully!" });
+    //                 });
+    //               });
+    //             } else {
+    //               // customer role = 3
+    //               user.setRoles([3]).then(() => {
+    //                 return res.send({ message: "User was registered successfully!", res:user });
+    //               });
+    //             }
+    //           })
+    //           .catch(err => {
+    //             res.status(500).send({ message: err.message });
+    //           });
             
-        }
-    });
+    //     }
+    // });
    
 }
 
@@ -243,24 +278,33 @@ module.exports.signIn = (req, res) => {
             message: "Invalid Password!"
           });
         }
-        var token = jwt.sign({ id: user.id }, process.env.secret, {
-          expiresIn: 86400 // 24 hours
-        });
-        var authorities = [];
-        user.getRoles().then(roles => {
-          for (let i = 0; i < roles.length; i++) {
-            authorities.push("ROLE_" + roles[i].name.toUpperCase());
-          }
+        // var token = jwt.sign({ id: user.id }, process.env.secret, {
+        //   expiresIn: 86400 // 24 hours
+        // });
+
+       
+
+       // var authorities = [];
+       // user.getRoles().then(roles => {
+          // for (let i = 0; i < roles.length; i++) {
+          //   authorities.push("ROLE_" + roles[i].name.toUpperCase());
+          // }
+
+          var token = jwt.sign({ userId: user.userId, email: user.email, firstName: user.firstName,
+
+            lastName:user.lastName, role:user.role }, process.env.secret, {
+            expiresIn: 86400 // 24 hours
+          });
           res.status(200).send({
        
-            userId: user.id,
+            userId: user.userId,
             email: user.email,
             firstName: user.firstName,
             lastName:user.lastName,   
-            roles: authorities,
+            roles: user.role,
             accessToken: token
           });
-        });
+       // });
       })
       .catch(err => {
         res.status(500).send({ message: err.message });

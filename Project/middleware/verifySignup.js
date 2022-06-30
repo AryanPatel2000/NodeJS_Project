@@ -75,9 +75,9 @@ validateToken = (req, res, next) => {
 
 
   const verifySignUp = {
-    checkDuplicateEmail: checkDuplicateEmail,
-    checkRolesExisted: checkRolesExisted,
-    validateToken:validateToken
+    checkDuplicateEmail : checkDuplicateEmail,
+    checkRolesExisted : checkRolesExisted,
+    validateToken : validateToken
   
   };
   module.exports = verifySignUp;
