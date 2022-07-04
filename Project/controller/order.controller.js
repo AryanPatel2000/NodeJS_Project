@@ -8,6 +8,8 @@ const Role = require('../models/role.model')
 const authJwt = require('../middleware/auth')
 const { sequelize, QueryTypes } = require('sequelize');
 
+const randomNumber = require('../helper/random')
+
 module.exports.createOrder = (req, res, next) => {
 
 
@@ -15,6 +17,8 @@ module.exports.createOrder = (req, res, next) => {
 
     try{ 
 
+        
+        order.orderNumber = randomNumber(8),
         order.orderDate = req.body.orderDate || Date.now(),
         order.userId = req.body.userId,
         order.itemId = req.body.itemId,
@@ -245,19 +249,23 @@ module.exports.updateOrderStatusByCustomer = async(req, res, next) => {
 
 module.exports.generateInvoice = async(req, res, next) => {
 
+    const userId = req.query
+    const secret_key = process.env.secret_key;
+    const stripe = require('stripe')(secret_key);
+
     await Order.findAll(
     { 
-        include: [
-            
+        include: [   
             {           
-                model: Item,                           
+                model: Item,
+                                     
             },
             {
                 model: User,
-                where: req.query, 
-            }
+                where: req.query,
 
-      ]
+            }
+        ]
       }
     )
 
@@ -265,6 +273,7 @@ module.exports.generateInvoice = async(req, res, next) => {
 
        res.status(200).json({
                 message: "orders " ,
+                totalAmount: req.price,
                 Total_order: order.length,
                 orders: order,
                     

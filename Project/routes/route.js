@@ -101,11 +101,25 @@ module.exports = function(app) {
 
     app.get('/order/show/invoice', orderController.generateInvoice)
 
-   app.post('/mfg/createMfg', mfgController.createMfg) //create mfg generateInvoice
-   
+   app.post('/mfg/createMfg', mfgController.createMfg) //create mfg generateInvoice  
 
   
+    //API for only Admin can access to get how many users are registered in system
 
+    app.get('/user/admin/access', 
+
+        [
+            authJwt.authenticateJWT,
+            authJwt.onlyAdmin,
+        ], userController.showOnlyAdmin)
    
 
+
+    
+    //Delete Item api which can be accessed by Admin
+    app.delete('/admin/delete/item/:id', 
+        [
+            authJwt.authenticateJWT,
+            authJwt.onlyAdmin,
+        ], itemController.deleteItemByAdmin)
 }

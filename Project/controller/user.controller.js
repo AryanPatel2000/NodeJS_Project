@@ -1,11 +1,11 @@
 require('dotenv').config();
-const {Sequelize, Op} = require('sequelize')
+const {Sequelize, Op, QueryTypes, DATE} = require('sequelize')
 const authJwt = require('../middleware/auth')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db.config');
-const Role = require('../models/role.model')
 const User = require('../models/user.model')
+const Order = require('../models/order.model')
 
 module.exports.signUp = (req, res) => {
 
@@ -43,53 +43,7 @@ module.exports.signUp = (req, res) => {
         
     }
 });
-    //Check email
-    // User.findOne({
-    //     where: {
-    //         email: req.body.email
-    //     }
-    // }).then( email => {
-    //     if(email)
-    //     {
-    //         res.status(400).send({message: "Email is already in use!",})
-    //     }
-    //     else{
-        
-    //         User.create({
-    //             email : req.body.email,
-    //             firstName: req.body.firstName,
-    //             lastName: req.body.lastName,
-    //             city: req.body.city,
-    //             password: req.body.password,
-    //            // password: bcrypt.hashSync(req.body.password, 8)
-    //         })
-
-    //         .then(user => {
-    //             if (req.body.roles) {
-    //               Role.findAll({
-    //                 where: {
-    //                   name: {
-    //                     [Op.or]: req.body.roles
-    //                   }
-    //                 }
-    //               }).then(roles => {
-    //                 user.setRoles(roles).then(() => {
-    //                   res.send({ message: "User was registered successfully!" });
-    //                 });
-    //               });
-    //             } else {
-    //               // customer role = 3
-    //               user.setRoles([3]).then(() => {
-    //                 return res.send({ message: "User was registered successfully!", res:user });
-    //               });
-    //             }
-    //           })
-    //           .catch(err => {
-    //             res.status(500).send({ message: err.message });
-    //           });
-            
-    //     }
-    // });
+    
    
 }
 
@@ -284,17 +238,12 @@ module.exports.signIn = (req, res) => {
 
        
 
-       // var authorities = [];
-       // user.getRoles().then(roles => {
-          // for (let i = 0; i < roles.length; i++) {
-          //   authorities.push("ROLE_" + roles[i].name.toUpperCase());
-          // }
-
           var token = jwt.sign({ userId: user.userId, email: user.email, firstName: user.firstName,
 
             lastName:user.lastName, role:user.role }, process.env.secret, {
             expiresIn: 86400 // 24 hours
           });
+
           res.status(200).send({
        
             userId: user.userId,
@@ -304,7 +253,7 @@ module.exports.signIn = (req, res) => {
             roles: user.role,
             accessToken: token
           });
-       // });
+       
       })
       .catch(err => {
         res.status(500).send({ message: err.message });
@@ -327,4 +276,168 @@ module.exports.getAllwithAuth = (req, res) => {
         res.status(500).send({message:'Invalid token', err:err.message})
     }
    
+}
+
+
+ module.exports.showOnlyAdmin = async(req, res) => {
+
+    const query = req.query;
+    console.log('Searching: ', query)
+    
+
+    try{    
+            const from = req.query.from;
+            const to = req.query.to;
+
+
+            if(req.query.from && req.query.to)
+            {
+
+                const date =  User.findAll({ where: {created_at: {
+                    [Op.and]:
+                        { 
+                          [Op.gte]: req.query.from,
+                          [Op.lte]: req.query.to 
+                        }
+                    }}
+                })
+
+                .then( (user) => {
+                    if(user)
+                    {
+                        return res.status(200).json({
+                            status:'Success',
+                            message: `Successfully Get  User`,
+                            totalUser:`Total user between date from ${from} to ${to} is: ${user.length}`,
+                            User: user,
+                                        
+                        });  
+                    }
+                    else{
+
+                        return res.status(402).send({
+                                status:'Failed!',
+                                message: `User not found`,
+                           
+                        });  
+                    }
+                        
+                })
+                .catch( (err) => {
+                    console.log(err)
+                     return res.status(402).send({
+                            status:'Failed!',
+                            message: `User not found`,
+                            error:err.message
+                                    
+                    });  
+                })
+
+               
+              
+            }
+            else if(req.query.from)
+            {
+                
+                    const date =  User.findAll({ where: {created_at: {
+                        [Op.and]:
+                            { 
+                              [Op.gte]: req.query.from,
+                              [Op.lte]: new DATE()
+                            }
+                        }}
+                    })
+                    .then( (user) => {
+                        if(user)
+                        {
+                            return res.status(200).json({
+                                status:'Success',
+                                message: `Successfully Get  User`,
+                                totalUser:`Total user between date from ${from} to ${to} is: ${user.length}`,
+                                User: user,
+                                            
+                            });  
+                        }
+                    })
+                                  
+            }
+
+            else if(req.query.to)
+            {
+                
+                    const date =  User.findAll({ where: {created_at: {
+                        [Op.and]:
+                            { 
+                             
+                              [Op.lte]: req.query.to,
+                            }
+                        }}
+                    })
+                    .then( (user) => {
+                        if(user)
+                        {
+                            return res.status(200).json({
+                                status:'Success',
+                                message: `Successfully Get  User`,
+                                totalUser:`Total user between date from ${from} to ${to} is: ${user.length}`,
+                                User: user,
+                                            
+                            });  
+                        }
+                    })
+                                  
+            }
+      
+        
+        const orderes = await Order.findAndCountAll({
+            attributes:{  
+                  include : [
+                    [Sequelize.fn('COUNT', Sequelize.col('User.userId')), 'count']
+                  ],
+                },
+                include:  [
+                    { 
+                        attributes: [], 
+                        model: User, 
+                        
+                        where : Order.userId == User.userId 
+                      }
+                  ], 
+                group: [Sequelize.col('Order.userId')]
+
+                
+          })
+          .then( async(orderes) => {
+           
+            const user = await User.findAll({ attributes : {exclude: ['password']}})
+
+                if(user)
+                {
+                    res.status(200).send({
+                        message:`Total_registered_user ${user.length}`,
+                        result:user,
+                        Order:`Total order count`,
+                        count:orderes.count
+                    })
+                }
+                else{
+                    return res.status(402).send({
+                   
+                        status:'Failed!',
+                        message:`User not found`,                       
+
+                    })
+                }
+              
+          })
+    
+     
+    }
+    catch(err)
+    {
+        console.log(err)
+      
+    }
+
+
 }

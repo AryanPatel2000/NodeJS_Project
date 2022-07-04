@@ -12,6 +12,11 @@ const Order = db.define('order', {
         allowNull:false,
         autoIncrement:true
     },
+    orderNumber: {
+
+        type: Sequelize.STRING,
+        
+    },
     orderDate: {
         type:Sequelize.DATEONLY,
         allowNull:false
@@ -19,7 +24,7 @@ const Order = db.define('order', {
     userId: {
         type: Sequelize.INTEGER,
         allowNull:false,
-        
+
     },
     itemId: {
         type:Sequelize.INTEGER,
@@ -37,5 +42,5 @@ module.exports = Order;
 
 Order.belongsTo(User, {foreignKey:'userId'})
 
-Order.belongsTo(Item, {foreignKey: 'itemId'})
+Order.belongsTo(Item, {foreignKey: 'itemId', onDelete: 'cascade',})
 

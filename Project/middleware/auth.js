@@ -109,13 +109,30 @@ isAdmin = async(req, res, next) => {
         return res.status(401).send({status:'Failed!',message:"You dont have permission"})
 
       }
-    
-    
-  }
+     
+ }
 
+ onlyAdmin = async(req, res, next) => {
+     
+  const userId =  req.user
+  
+  var userDetails = await User.findOne({ where: { userId: userId } })
+
+  console.log(userDetails)
+
+  if(req.user.role === 'Admin')
+  {
+       next();
+  }
+  else{
+
+    return res.status(401).send({status:'Failed!',message:"You dont have permission"})
+
+  }
+ 
+}
   UpdateOrderStatusforCustomer = async(req, res, next) => {
     
-      
     const userId =  req.user
     
     var userDetails = await User.findOne({ where: { userId: userId } })
@@ -128,7 +145,7 @@ isAdmin = async(req, res, next) => {
     }
     else{
 
-      return res.status(401).send({status:'Failed!',message:"You dont have permission"})
+      return res.status(401).send({status:'Failed!',message:"You don't have permission"})
 
     }
   
@@ -158,6 +175,10 @@ authenticateJWT = (req, res, next) => {
       return res.status(403).send({message:'No token provided..'});
     }
 };
+
+
+
+
   const authJwt = {
     
     verifyToken: verifyToken,
@@ -166,7 +187,8 @@ authenticateJWT = (req, res, next) => {
     isCustomer:isCustomer,
     checkRoles:checkRoles,
     UpdateOrderStatusforCustomer:UpdateOrderStatusforCustomer,
-    authenticateJWT:authenticateJWT   
+    authenticateJWT:authenticateJWT ,
+    onlyAdmin:onlyAdmin, 
     
   };
 

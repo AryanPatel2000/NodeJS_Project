@@ -64,9 +64,17 @@ const User = db.define('user', {
             }
         }
         
-    }
+    },
+    createdAt: {
+        field: 'created_at',
+        type: Sequelize.DATEONLY,
+    },
+    updatedAt: {
+        field: 'updated_at',
+        type: Sequelize.DATEONLY,
+    },
    
-}, { freezeTableName: true,  timestamps: false ,
+}, { freezeTableName: true ,
  
     //for hashing password
     hooks:{

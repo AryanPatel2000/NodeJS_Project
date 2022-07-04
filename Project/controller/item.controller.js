@@ -2,9 +2,9 @@ require('dotenv').config();
 const {Sequelize, Op, QueryTypes} = require('sequelize')
 const jwt = require('jsonwebtoken');
 const db = require('../config/db.config');
-const role = require('../models/role.model')
-const Item = require('../models/item.model')
-const User = require('../models/user.model')
+const Order = require('../models/item.model');
+const Item = require('../models/item.model');
+const User = require('../models/user.model');
 
 
 module.exports.addItem = (req, res, next) => {
@@ -302,3 +302,88 @@ module.exports.sortExpDate = async(req, res) => {
 
 
 
+module.exports.deleteItemByAdmin = async(req, res, next) => {
+
+    const id = req.params.id;
+    console.log('itemId: ',id)
+
+   // if(id === Order.itemId && id == Order.status == 'Ordered')
+
+    try{
+        // if(req.params.id === Order.itemId && req.params.id == Order.status == 'Ordered')
+        // {
+        //     console.log('Item can not be deleted');
+        //     return res.send('Item can not be deleted')
+        // }
+        Item.destroy({
+
+            include:[{model:Order}],
+            where:{ itemId:id, },
+           
+        
+          }).then( (deleted) => {
+
+                  
+
+                if(deleted)
+                {
+                    // if(deleted === Order.itemId &&  Order.status == 'Ordered')
+                    // {
+                    //     console.log('Item can not be deleted');
+                    //     return res.send('Item can not be deleted')
+                    // }
+                    
+                    return res.status(200).send({ message: 'Item deleted successfully with id = ' + id });
+                }
+                else{
+
+                    return res.status(500).send({status:'Failed!', message: `Item not found or invalid id ${id}` });
+                }   
+                    
+
+            })
+            .catch(err => {
+                console.log(err)
+                res.status(500).send({status:'Failed!', message: "Item not found ",error: err.message});
+            })
+    }
+    catch(err)
+    {
+        console.log(err);
+        res.status(500).send({status:'Failed!', message: "Error occuring while deliting item ",error: err.message});
+    }
+
+
+
+    //=========================================================
+    // const id = req.params.id;
+    // console.log('itemId: ',id)
+    // try{
+    //     Item.destroy({
+
+    //         where:{ itemId: id }
+        
+    //       }).then( (deleted) => {
+
+    //             if(deleted)
+    //             {
+    //                 return res.status(200).send({ message: 'Item deleted successfully with id = ' + id });
+    //             }
+    //             else{
+    //                 return res.status(500).send({status:'Failed!', message: `Item not found or invalid id ${id}` });
+    //             }   
+                    
+
+    //         })
+    //         .catch(err => {
+
+    //             res.status(500).send({status:'Failed!', message: "Item not found ",error: err.message});
+    //         })
+    // }
+    // catch(err)
+    // {
+    //     console.log(err);
+    //     res.status(500).send({status:'Failed!', message: "Error occuring while deliting item ",error: err.message});
+    // }
+    
+}
