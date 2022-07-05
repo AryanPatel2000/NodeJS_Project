@@ -21,7 +21,7 @@ checkDuplicateEmail = (req, res, next) => {
         }
         next();
       });
-    };
+  };
   
 
   

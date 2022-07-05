@@ -42,5 +42,8 @@ module.exports = Order;
 
 Order.belongsTo(User, {foreignKey:'userId'})
 
-Order.belongsTo(Item, {foreignKey: 'itemId', onDelete: 'cascade',})
+Order.belongsTo(Item, 
+    {foreignKey: 'itemId',
+     onDelete: 'cascade',
+    })
 

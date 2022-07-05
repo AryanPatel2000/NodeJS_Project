@@ -65,6 +65,14 @@ const User = db.define('user', {
         }
         
     },
+    status: {
+        type:  Sequelize.ENUM,
+        values: ['Active', 'inActive'],
+    },
+    isVarify: {
+        type: Sequelize.BOOLEAN,
+       
+    },
     createdAt: {
         field: 'created_at',
         type: Sequelize.DATEONLY,

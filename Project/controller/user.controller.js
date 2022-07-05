@@ -348,6 +348,7 @@ module.exports.getAllwithAuth = (req, res) => {
                         }}
                     })
                     .then( (user) => {
+                        
                         if(user)
                         {
                             return res.status(200).json({

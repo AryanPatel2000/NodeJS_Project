@@ -33,7 +33,7 @@ const Role = require('./models/role.model');
 //     })
 
 
-// Order.sync({force:true})
+// Order.sync({alter:true})
 //     .then( () => {
 //         console.log('Resync DB')
 //     })
@@ -44,10 +44,10 @@ const Role = require('./models/role.model');
 //     })
 
 
-// User.sync({alter:true})
-// .then( () => {
-//     console.log('Resync Db')
-// })
+User.sync({alter:true})
+.then( () => {
+    console.log('Resync Db')
+})
 
 require('./routes/auth.route')(app);
 require('./routes/route')(app)

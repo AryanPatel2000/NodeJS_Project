@@ -2,7 +2,7 @@ require('dotenv').config();
 const {Sequelize, Op, QueryTypes} = require('sequelize')
 const jwt = require('jsonwebtoken');
 const db = require('../config/db.config');
-const Order = require('../models/item.model');
+const Order = require('../models/order.model');
 const Item = require('../models/item.model');
 const User = require('../models/user.model');
 
@@ -304,58 +304,33 @@ module.exports.sortExpDate = async(req, res) => {
 
 module.exports.deleteItemByAdmin = async(req, res, next) => {
 
-    const id = req.params.id;
-    console.log('itemId: ',id)
+    const findItem = Order.findOne({
 
-   // if(id === Order.itemId && id == Order.status == 'Ordered')
-
-    try{
-        // if(req.params.id === Order.itemId && req.params.id == Order.status == 'Ordered')
-        // {
-        //     console.log('Item can not be deleted');
-        //     return res.send('Item can not be deleted')
-        // }
-        Item.destroy({
-
-            include:[{model:Order}],
-            where:{ itemId:id, },
-           
+        include: [
+            {
+              model: Item,
+              where: {itemId:req.params.id } 
+              
+            },
+    
+          ]
         
-          }).then( (deleted) => {
+    }).then( user => {
+        if(user)
+        {
+            res.status(400).send({status: false, message: "Failed! item is already in use!"});
+        }
+        else{
 
-                  
-
-                if(deleted)
-                {
-                    // if(deleted === Order.itemId &&  Order.status == 'Ordered')
-                    // {
-                    //     console.log('Item can not be deleted');
-                    //     return res.send('Item can not be deleted')
-                    // }
-                    
-                    return res.status(200).send({ message: 'Item deleted successfully with id = ' + id });
-                }
-                else{
-
-                    return res.status(500).send({status:'Failed!', message: `Item not found or invalid id ${id}` });
-                }   
-                    
-
-            })
-            .catch(err => {
-                console.log(err)
-                res.status(500).send({status:'Failed!', message: "Item not found ",error: err.message});
-            })
-    }
-    catch(err)
-    {
-        console.log(err);
-        res.status(500).send({status:'Failed!', message: "Error occuring while deliting item ",error: err.message});
-    }
+             Item.destroy({ where:{itemId:req.params.id } });
+           return res.status(200).send({ status: true, message: `Item successfully deleted with itemId: ${req.params.id}`})
 
 
+        }
+    });
 
-    //=========================================================
+
+    //====================Delete Item=====================================
     // const id = req.params.id;
     // console.log('itemId: ',id)
     // try{
@@ -386,4 +361,4 @@ module.exports.deleteItemByAdmin = async(req, res, next) => {
     //     res.status(500).send({status:'Failed!', message: "Error occuring while deliting item ",error: err.message});
     // }
     
-}
+    }
