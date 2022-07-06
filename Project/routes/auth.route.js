@@ -18,6 +18,7 @@ module.exports = function(app) {
       );
       next();
     });
+
     app.post(
       "/user/signUp",
       [
@@ -28,7 +29,12 @@ module.exports = function(app) {
     );
 
 
-    app.post("/user/signIn", userController.signIn);
+    app.post("/user/signIn",
+      [
+        authJwt.onlyActiveUser
+      ],
+      userController.signIn);
+
 
     app.get("/user/all", rolleController.allAccess);
 

@@ -17,14 +17,6 @@ const User = require('./models/user.model')
 const Order = require('./models/order.model')
 const Item = require('./models/item.model')
 const Mfg = require('./models/mfg.model')
-const Role = require('./models/role.model');
-
-
-// Role.sync({alter:true})
-//     .then( () => {
-//         console.log('Resync DB');
-//       //initial();
-// })
 
 
 // Mfg.sync({force:true})
@@ -33,10 +25,11 @@ const Role = require('./models/role.model');
 //     })
 
 
-// Order.sync({alter:true})
+// Order.sync({force:true})
 //     .then( () => {
 //         console.log('Resync DB')
 //     })
+
 
 // Item.sync({force:true})
 //     .then( () => {
@@ -44,10 +37,10 @@ const Role = require('./models/role.model');
 //     })
 
 
-User.sync({alter:true})
-.then( () => {
-    console.log('Resync Db')
-})
+// User.sync({alter:true})
+// .then( () => {
+//     console.log('Resync Db')
+// })
 
 require('./routes/auth.route')(app);
 require('./routes/route')(app)

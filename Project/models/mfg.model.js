@@ -1,5 +1,6 @@
 const Sequelize = require('sequelize');
 const db = require('../config/db.config')
+const User = require('./user.model')
 
 const Mfg = db.define('mfg',{
 
@@ -17,3 +18,5 @@ const Mfg = db.define('mfg',{
 
 
 module.exports = Mfg;
+
+Mfg.belongsTo(User, {foreignKey:'userId'})

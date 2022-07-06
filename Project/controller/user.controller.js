@@ -1,49 +1,123 @@
 require('dotenv').config();
 const {Sequelize, Op, QueryTypes, DATE} = require('sequelize')
+const nodemailer = require('nodemailer');
 const authJwt = require('../middleware/auth')
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const db = require('../config/db.config');
 const User = require('../models/user.model')
 const Order = require('../models/order.model')
+const generateOtp = require('../helper/generateOTP')
+const sendEmail = require('../helper/emailSender')
 
-module.exports.signUp = (req, res) => {
+module.exports.signUp = async(req, res) => {
 
-  User.findOne({
-    where: {
-        email: req.body.email
-    }
-}).then( email => {
-    if(email)
-    {
-        res.status(400).send({message: "Email is already in use!",})
-    }
-    else{
-    
-        User.create({
-            email : req.body.email,
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            city: req.body.city,
-            password: req.body.password,
-            role:req.body.role
-           // password: bcrypt.hashSync(req.body.password, 8)
-        })
 
-        .then(user => {
-            if (user) {
+// To add minutes to the current time
+function AddMinutesToDate(date, minutes) {
+    return new Date(date.getTime() + minutes * 60000);
+  }
 
-              return res.send({ message: "User was registered successfully!", res:user });
+  const now = new Date()
+  console.log('Time: ', now.getTime())
 
-            } 
-          })
-          .catch(err => {
-            res.status(500).send({ message: err.message });
-          });
+    User.findOne({
+        where: {
+                email: req.body.email
+            }
+        }).then( email => {
+        if(email)
+        {
+            res.status(400).send({message: "Email is already in use!",})
+        }
+        else{
         
-    }
-});
+            User.create({
+                email : req.body.email,
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                city: req.body.city,
+                password: req.body.password,
+                role:req.body.role,
+                status: req.body.status,
+                isVarify: req.body.isVarify,
+                OTP : generateOtp(),
+                expireOtpTime: AddMinutesToDate(now, 10)
+               
+            })
     
+            .then(async(user) => {
+
+                if (user) {
+                    
+                    const text = 'Email Implement sendEmail for register API using ethereal.email';
+                    const subject = 'Verify Email';
+                    await sendEmail(user.email, subject, text);
+
+                       res.status(200).send({ 
+                       message: "User was registered successfully!", 
+                       res:user,
+                       msg:'Mail send',                                          
+                     });
+                } 
+              })
+              .catch(err => {
+                res.status(500).send({ message: err.message });
+                console.log(err)
+              });
+            
+
+        }
+    });
+
+    //===========================================
+    // User.findOne({
+    //     where: {
+    //             email: req.body.email
+    //         }
+    //     }).then( email => {
+    //     if(email)
+    //     {
+    //         res.status(400).send({message: "Email is already in use!",})
+    //     }
+    //     else{
+        
+    //         User.create({
+    //             email : req.body.email,
+    //             firstName: req.body.firstName,
+    //             lastName: req.body.lastName,
+    //             city: req.body.city,
+    //             password: req.body.password,
+    //             role:req.body.role,
+    //             status: req.body.status,
+    //             isVarify: req.body.isVarify
+               
+    //         })
+    
+    //         .then(async(user) => {
+
+    //             if (user) {
+                    
+    //                 const text = 'Email Implement sendEmail for register API using ethereal.email';
+    //                 const subject = 'Verify Email';
+    //                 await sendEmail(user.email, subject, text);
+
+    //                    res.status(200).send({ 
+    //                    message: "User was registered successfully!", 
+    //                    res:user,
+    //                    msg:'Mail send',                                          
+    //                  });
+    //             } 
+    //           })
+    //           .catch(err => {
+    //             res.status(500).send({ message: err.message });
+    //             console.log(err)
+    //           });
+            
+
+    //     }
+    // });
+
    
 }
 
@@ -240,7 +314,7 @@ module.exports.signIn = (req, res) => {
 
           var token = jwt.sign({ userId: user.userId, email: user.email, firstName: user.firstName,
 
-            lastName:user.lastName, role:user.role }, process.env.secret, {
+            lastName:user.lastName, role:user.role, status:user.status,isVarify: user.isVarify }, process.env.secret, {
             expiresIn: 86400 // 24 hours
           });
 
@@ -251,6 +325,8 @@ module.exports.signIn = (req, res) => {
             firstName: user.firstName,
             lastName:user.lastName,   
             roles: user.role,
+            status:user.status,
+            isVarify: user.isVarify,
             accessToken: token
           });
        

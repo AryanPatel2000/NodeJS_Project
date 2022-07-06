@@ -42,7 +42,8 @@ module.exports = function(app) {
     app.post('/item/add',[
        
             authJwt.authenticateJWT,
-            authJwt.checkRoles
+            authJwt.checkRoles,
+           // authJwt.onlyActiveUser
         ], 
         itemController.addItem) 
 
@@ -63,18 +64,24 @@ module.exports = function(app) {
 
    app.get('/item/sortExpDate', itemController.sortExpDate) //Sorting based on Date, "expiryDate" 
 
-   app.post('/order/createOrder',  [authJwt.verifyToken] , orderController.createOrder) // create Order
 
-  app.get('/order/viewMyOrders' ,[authJwt.verifyToken],  orderController.viewMyOrders) // view my orders using auth 
+   //app.post('/order/createOrder',  [authJwt.verifyToken] , orderController.createOrder) // create Order
+   app.post('/order/createOrder', 
+   
+         [authJwt.authenticateJWT] , 
+
+         orderController.createOrder) // create Order
+
+
+  app.get('/order/viewMyOrders' ,[authJwt.authenticateJWT],  orderController.viewMyOrders) // view my orders using auth 
 
     
-  //const permit = require('../middleware/auth')
 
   // app.get('/order/showAllOrder',[authJwt.verifyToken], orderController.showAllOrders) // show all order
    //app.get('/order/showAllOrder',[authJwt.verifyToken], orderController.showAllOrders) // show all order
 
   
-  app.get('/order/showAllOrder',[authJwt.verifyToken, authJwt.isAdmin], orderController.showAllOrders)
+  app.get('/order/showAllOrder',[authJwt.authenticateJWT, authJwt.onlyAdmin], orderController.showAllOrders)
 
   
     app.put('/order/update/status', 

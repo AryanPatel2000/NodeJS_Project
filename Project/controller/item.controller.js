@@ -12,14 +12,15 @@ module.exports.addItem = (req, res, next) => {
         try{
 
             Item.create({
-                       itemName:req.body.itemName,
-                       mfg_date:req.body.mfg_date,
-                       exp_date:req.body.exp_date,
-                       price:req.body.price,
-                       mfg_Id:req.body.mfg_Id,
+                        itemName:req.body.itemName,
+                        mfg_date:req.body.mfg_date,
+                        exp_date:req.body.exp_date,
+                        price:req.body.price,
+                        mfg_Id:req.body.mfg_Id,
                 })  
             .then( (item) => {
                 if(item)
+                
                  return res.status(200).send({status:'Success', message:`Item successfull inserted with id: ${item.itemId}`, res:item})
     
             })

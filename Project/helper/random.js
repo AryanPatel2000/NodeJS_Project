@@ -13,7 +13,7 @@ randomNumber = (length)  => {
    return result;
 }
 
-    console.log(`Random Number: ${randomNumber(8)}`);
+    //console.log(`Random Number: ${randomNumber(8)}`);
 
 
 module.exports = randomNumber;

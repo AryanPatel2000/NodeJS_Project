@@ -68,10 +68,30 @@ const User = db.define('user', {
     status: {
         type:  Sequelize.ENUM,
         values: ['Active', 'inActive'],
+        validate: {
+            isIn: {
+                args: [['Active', 'inActive']],
+                msg: "Status must be Active or inActive"
+            }
+        }
     },
     isVarify: {
         type: Sequelize.BOOLEAN,
+        validate: {
+            isIn: {
+                args: [[true, false]],
+                msg: "isvarify must contain true or false value"
+            }
+        }
        
+    },
+    OTP: {
+
+        type:Sequelize.INTEGER,
+
+    },
+    expireOtpTime :{
+        type: Sequelize.DATE
     },
     createdAt: {
         field: 'created_at',

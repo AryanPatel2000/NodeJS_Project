@@ -10,19 +10,32 @@ const { sequelize, QueryTypes } = require('sequelize');
 
 const randomNumber = require('../helper/random')
 
-module.exports.createOrder = (req, res, next) => {
+module.exports.createOrder = async(req, res, next) => {
 
 
     let order = {}
 
     try{ 
 
-        
+
         order.orderNumber = randomNumber(8),
         order.orderDate = req.body.orderDate || Date.now(),
         order.userId = req.body.userId,
         order.itemId = req.body.itemId,
         order.status = 'Ordered' 
+
+        User.findByPk(req.body.userId)
+
+        .then( (user) => {
+
+            console.log(user.status)
+
+            if(user.status == 'inActive')
+            {
+                return res.status(500).send({Order:'Failed!',message:`Order can't be placed because of user is : ${user.status} `})
+            }
+       
+
 
         Item.findByPk(req.body.itemId)
         .then( result => {
@@ -39,6 +52,7 @@ module.exports.createOrder = (req, res, next) => {
                 return res.status(200).send({Order:'Success', message:'Thank you for your order', res:ordered})
             })
         }
+        })
     })
        
     }
@@ -47,6 +61,8 @@ module.exports.createOrder = (req, res, next) => {
         //console.log(err)
         return res.status(500).send({Order:'Failed!', message:'Something went wrong while placing order', error:err.message})
     }
+
+
     
     
 }
@@ -54,14 +70,10 @@ module.exports.createOrder = (req, res, next) => {
 
 module.exports.viewMyOrders = async(req, res, next) => {
 
-
-    const query = req.query;
-    console.log('Searching: ', query)
     try{
-        let userId = req.query.userId;
-        let status = req.query.status;
-        Order.findAll({ where: req.query})
-
+       
+        //Order.findAll({ where: req.query})
+        Order.findAll({where: req.authorization})
         .then(order => {
 
            res.status(200).json({
@@ -90,7 +102,7 @@ module.exports.showAllOrders = (req, res) => {
   
     try{
        
-        Order.findAll({})
+        Order.findAll({ include:[ {model:User}] })
 
         .then(order => {
 
@@ -104,7 +116,7 @@ module.exports.showAllOrders = (req, res) => {
         })
         .catch(error => {
             console.log(error)
-            res.status(500).json({message:`Order not found` , error: error });
+            res.status(500).json({message:`Order not found` , error: error.message });
         });
     }
     catch(err)

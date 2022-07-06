@@ -131,6 +131,37 @@ isAdmin = async(req, res, next) => {
   }
  
 }
+
+onlyActiveUser = async(req, res, next) => {
+
+
+  var userDetails = await User.findOne({ where: { email: req.body.email } })
+
+    .then( (user) => {
+      if (!user) {
+        return res.status(404).send({status:false, message: "User Not found." });
+      }
+      else{
+          console.log('User: ',JSON.stringify(user,null, 4))
+
+          if(user.status === 'inActive')
+          {
+        
+            return res.status(401).send({status:'Failed!',message:"You can not login because your account is not active"})
+            
+          }
+          else{
+        
+                next();
+         
+              }
+      }
+
+    })
+
+ 
+}
+
   UpdateOrderStatusforCustomer = async(req, res, next) => {
     
     const userId =  req.user
@@ -170,12 +201,12 @@ authenticateJWT = (req, res, next) => {
             req.user = user;
             next();
             console.log(user)
+           
         });
     } else {
       return res.status(403).send({message:'No token provided..'});
     }
 };
-
 
 
 
@@ -189,6 +220,9 @@ authenticateJWT = (req, res, next) => {
     UpdateOrderStatusforCustomer:UpdateOrderStatusforCustomer,
     authenticateJWT:authenticateJWT ,
     onlyAdmin:onlyAdmin, 
+    onlyActiveUser:onlyActiveUser,
+   
+   
     
   };
 
