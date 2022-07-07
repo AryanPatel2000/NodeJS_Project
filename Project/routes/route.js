@@ -129,4 +129,24 @@ module.exports = function(app) {
             authJwt.authenticateJWT,
             authJwt.onlyAdmin,
         ], itemController.deleteItemByAdmin)
+
+
+
+    app.post('/otp/varifyOtp/:otp', userController.verifyOtp)
+   
+
+
+        //Change password api
+   app.post('/password/resetPassword',
+        [
+            authJwt.authenticatePassChange
+
+        ], userController.resetPasswordLink) // share link of reset password
+
+   app.post('/password/setNewPassword/:userId/:otp', 
+        [
+            authJwt.authenticateNewPass 
+
+        ],userController.setNewPassword) //set new password
+
 }

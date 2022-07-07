@@ -10,16 +10,24 @@ const Order = require('../models/order.model')
 const generateOtp = require('../helper/generateOTP')
 const sendEmail = require('../helper/emailSender')
 
+
+
+
+ 
 module.exports.signUp = async(req, res) => {
 
 
-// To add minutes to the current time
-function AddMinutesToDate(date, minutes) {
-    return new Date(date.getTime() + minutes * 60000);
-  }
+    // To add minutes to the current time
+    function AddMinutesToDate(date, minutes) {
+    
+        console.log('Time: ', date.getHours() ,':', date.getMinutes() ,':', date.getSeconds())
+        console.log(date.getTime())
+    return new Date(date.getTime() + minutes * 50000);
+
+}
 
   const now = new Date()
-  console.log('Time: ', now.getTime())
+  console.log('Time: ', `${now.getHours()} : ${now.getMinutes()} : ${now.getSeconds()}` , )
 
     User.findOne({
         where: {
@@ -32,6 +40,7 @@ function AddMinutesToDate(date, minutes) {
         }
         else{
         
+         
             User.create({
                 email : req.body.email,
                 firstName: req.body.firstName,
@@ -42,7 +51,7 @@ function AddMinutesToDate(date, minutes) {
                 status: req.body.status,
                 isVarify: req.body.isVarify,
                 OTP : generateOtp(),
-                expireOtpTime: AddMinutesToDate(now, 10)
+                expireOtpTime: AddMinutesToDate( now, 5)
                
             })
     
@@ -51,8 +60,19 @@ function AddMinutesToDate(date, minutes) {
                 if (user) {
                     
                     const text = 'Email Implement sendEmail for register API using ethereal.email';
-                    const subject = 'Verify Email';
-                    await sendEmail(user.email, subject, text);
+                    const subject = 'Verify OTP';
+                    const html = `
+                            <div class= "container",
+                                style = "max-width: 90%; margin: auto; padding-top:20px"
+                            >
+                                <h3>Welcome</h3>
+                                <h4>You are officially In </h4>
+                                <p style:"margin-bottom: 30px"; >Pleas enter the sign up OTP to get started</p>
+                                <h1 style="font-size: 40px; letter-spacing: 2px; text-align:center;">${user.OTP}</h1>
+                            </div>
+                            `
+
+                    await sendEmail(user.email, subject, text, html);
 
                        res.status(200).send({ 
                        message: "User was registered successfully!", 
@@ -70,53 +90,104 @@ function AddMinutesToDate(date, minutes) {
         }
     });
 
-    //===========================================
-    // User.findOne({
-    //     where: {
-    //             email: req.body.email
-    //         }
-    //     }).then( email => {
-    //     if(email)
-    //     {
-    //         res.status(400).send({message: "Email is already in use!",})
-    //     }
-    //     else{
+   
+}
+
+module.exports.verifyOtp = async(req, res, next) => {
+
+
+    try{
+        var currentdate = new Date(); 
+      
+       const otp = req.params.otp
+       console.log('OTP: ', otp)
         
-    //         User.create({
-    //             email : req.body.email,
-    //             firstName: req.body.firstName,
-    //             lastName: req.body.lastName,
-    //             city: req.body.city,
-    //             password: req.body.password,
-    //             role:req.body.role,
-    //             status: req.body.status,
-    //             isVarify: req.body.isVarify
-               
-    //         })
-    
-    //         .then(async(user) => {
+        if(!otp){
+            return res.status(400).send({
+                status:'Failed!',
+                message:'OTP not provided'
+            })
+         
+        } 
+  
 
-    //             if (user) {
-                    
-    //                 const text = 'Email Implement sendEmail for register API using ethereal.email';
-    //                 const subject = 'Verify Email';
-    //                 await sendEmail(user.email, subject, text);
+        const otp_instance= await User.findOne({where:{OTP: otp}})
 
-    //                    res.status(200).send({ 
-    //                    message: "User was registered successfully!", 
-    //                    res:user,
-    //                    msg:'Mail send',                                          
-    //                  });
-    //             } 
-    //           })
-    //           .catch(err => {
-    //             res.status(500).send({ message: err.message });
-    //             console.log(err)
-    //           });
+        console.log(JSON.stringify(otp_instance, null, 4))
+
+
+        console.log('isVarify: ',otp_instance.isVarify)
+        console.log('OTP: ',otp_instance.OTP)
+
+        //Check if OTP is available in the DB
+        if(otp_instance.OTP != null )
+        {
+
+            console.log('OTP: ', otp_instance.OTP)
+
+          //Check if OTP is already used or not
+          if(otp_instance.isVarify !=true)
+          {
             
+             console.log('After varifying OTP: isVarify: : ',otp_instance.isVarify)
 
-    //     }
-    // });
+              //Check if OTP is expired or not
+             // if (dates.compare(otp_instance.expiration_time, currentdate)==1){
+    
+                  //Check if OTP is equal to the OTP in the DB
+
+                  if(otp==otp_instance.OTP){
+
+                    
+                      // Mark OTP as verified or used
+                      otp_instance.isVarify=true
+                      console.log("After varifying OTP: isVarify: ",otp_instance.isVarify)
+                      otp_instance.save()
+    
+                    return res.status(200).send({
+                        status:'Success',
+                        message:'isVarify updated successfully..'
+                    })
+                      
+                  }
+                  else{
+                    return res.status(400).send({
+                        status:'Failed!',
+                        message:'OTP NOT Matched..'
+                    })
+                      
+                  }   
+            //   }
+            //   else{
+            //       const response={"Status":"Failure","Details":"OTP Expired"}
+            //       return res.status(400).send(response) 
+            //   }
+          }
+          else{
+                    return res.status(400).send({
+                        status:'Failed!',
+                        message:'OTP Already Used'
+                    })
+              
+              }
+          }
+        else{
+
+            return res.status(400).send({
+                status:'Failed!',
+                message:'Something went wrong!'
+            })
+            
+        }
+      }catch(err){
+
+            return res.status(400).send({
+                status:'Failed!',
+                message:'OTP not valid',
+                error: err.message
+            })
+         
+      }
 
    
 }
@@ -140,6 +211,7 @@ module.exports.findAll = (req, res) => {
     catch(err)
     {
         res.status(500).send({status:'Failed!', message:'Error ocuuring while fetching records'})
+        console.log(err)
     }
    
 }
@@ -516,5 +588,85 @@ module.exports.getAllwithAuth = (req, res) => {
       
     }
 
+
+}
+
+
+module.exports.resetPasswordLink = async(req, res, next) => {
+
+    try {
+        
+        const email = req.body.email
+        console.log(email)
+
+        const user = await User.findOne({where:{email: email}});
+           // console.log(user)
+        if (!user)
+            return res.status(400).send("user with given email doesn't exist");
+
+       // let otp = await User.findOne({ userId: user.userId });
+        
+
+         const link = `http://localhost:5000/password/setNewPassword/${user.userId}/${user.OTP}`;
+
+        const text = 'Email Implement sendEmail for register API using ethereal.email';
+        const subject = 'Password reset';
+        const html = `
+                <div class= "container",
+                    style = "max-width: 90%; margin: auto; padding-top:20px"
+                >
+                    <h3>Welcome</h3>
+                    <h4>Request for reset password </h4>
+                    <p style:"margin-bottom: 30px"; >Follow this link to reset your password</p>
+                    <h3 style="font-size: 30px; letter-spacing: 2px; text-align:center;">${link}</h3>
+                </div>
+                `
+                
+        await sendEmail(user.email, subject,text, html);
+
+        res.status(200).send({message:"password reset link sent to your email account"});
+
+    } catch (error) {
+        res.status(400).send({status:false, message:"Error occuring", error:error.message});;
+        console.log(error);
+    }
+}
+
+module.exports.setNewPassword = async(req, res, next) => {
+
+    try{
+        const user = await User.findByPk(req.params.userId);
+        if (!user) return res.status(400).send({message: "invalid link or expired"});
+    
+        const find = await User.findOne({
+            userId: user.userId,
+            otp: req.params.otp,
+        })
+
+        if (!find) 
+            return res.status(400).send({
+                status:false,
+                message: "invalid link or expired"
+            });
+        
+    
+        user.password = bcrypt.hashSync(req.body.password)//req.body.password;
+           
+            await user.save()
+            .then( (change) => {
+                return res.status(200).send({
+                    status:'Success', 
+                    message: `Password Successfully Reset with userId : ${user.userId} `,
+                    email: `${user.email}`
+                });
+            })
+         
+    }
+    catch(err)
+    {
+        res.status(400).send({status:false, message: "An error occured", error:err.message});
+        console.log(err);
+    }
+ 
 
 }

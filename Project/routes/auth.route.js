@@ -31,7 +31,8 @@ module.exports = function(app) {
 
     app.post("/user/signIn",
       [
-        authJwt.onlyActiveUser
+        authJwt.onlyActiveUser,
+        authJwt.checkIsVerify
       ],
       userController.signIn);
 

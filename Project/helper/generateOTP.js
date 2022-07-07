@@ -11,7 +11,7 @@ generateOtp = (req, res, next) => {
     {
         otp = otp + digits[Math.floor(Math.random()* digits.length)];
     }
-    console.log('OTP is: ',otp);
+   // console.log('OTP is: ',otp);
    
     return otp
 

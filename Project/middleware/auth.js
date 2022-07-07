@@ -134,7 +134,6 @@ isAdmin = async(req, res, next) => {
 
 onlyActiveUser = async(req, res, next) => {
 
-
   var userDetails = await User.findOne({ where: { email: req.body.email } })
 
     .then( (user) => {
@@ -158,8 +157,28 @@ onlyActiveUser = async(req, res, next) => {
       }
 
     })
-
  
+}
+
+checkIsVerify  = async(req, res, next) => {
+
+  const userDetails = await User.findOne({where :{ email : req.body.email } })
+  .then( (user) => {
+
+    if(!user){
+      return res.status(400).send({status:false, message:'User not found '});
+
+    }else{
+
+        if(user.isVarify == true)
+        {
+          next()
+        }
+        else{
+          return res.status(400).send({status:false, message: 'Verify your account'})
+        }
+    }
+  })
 }
 
   UpdateOrderStatusforCustomer = async(req, res, next) => {
@@ -179,7 +198,6 @@ onlyActiveUser = async(req, res, next) => {
       return res.status(401).send({status:'Failed!',message:"You don't have permission"})
 
     }
-  
   
 }
 
@@ -208,7 +226,71 @@ authenticateJWT = (req, res, next) => {
     }
 };
 
+authenticatePassChange = (req, res, next) => {
 
+  const authHeader = req.headers.authorization;
+
+  if (authHeader) {
+      const token = authHeader.split(' ')[1];
+
+      jwt.verify(token, process.env.secret, (err, user) => {
+       
+          if (err) {
+            console.log(err)
+             return res.status(403).send({message:'Not valid token'});
+          }
+
+          if(req.body.email != user.email)
+          {
+            return res.status(403).send({
+                status:'Failed!',  
+                message:'You are not valid user to change password'
+              });
+
+          }else{
+            next()
+          }
+         
+          console.log(user)
+         
+      });
+  } else {
+    return res.status(403).send({message:'No token provided..'});
+  }
+};
+
+authenticateNewPass = (req, res, next) => {
+
+  const authHeader = req.headers.authorization;
+
+  if (authHeader) {
+      const token = authHeader.split(' ')[1];
+
+      jwt.verify(token, process.env.secret, (err, user) => {
+       
+          if (err) {
+            console.log(err)
+             return res.status(403).send({message:'Not valid token'});
+          }
+
+          if(req.params.userId != user.userId)
+          {
+            return res.status(403).send({
+                status:'Failed!',  
+                message:'You are not valid user to change password'
+              });
+
+          }else{
+            next()
+          }
+         
+          console.log(user)
+         
+      });
+  } else {
+    return res.status(403).send({message:'No token provided..'});
+  }
+};
 
   const authJwt = {
     
@@ -221,6 +303,9 @@ authenticateJWT = (req, res, next) => {
     authenticateJWT:authenticateJWT ,
     onlyAdmin:onlyAdmin, 
     onlyActiveUser:onlyActiveUser,
+    checkIsVerify:checkIsVerify,
+    authenticatePassChange:authenticatePassChange,
+    authenticateNewPass:authenticateNewPass
    
    
     
