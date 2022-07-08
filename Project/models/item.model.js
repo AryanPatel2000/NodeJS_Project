@@ -39,6 +39,9 @@ const Item = db.define('item', {
            
         },   
     },
+    image: {
+        type: Sequelize.STRING
+    },
     mfg_Id: {
         type: Sequelize.INTEGER,
         allowNull: false
@@ -50,6 +53,5 @@ const Item = db.define('item', {
 module.exports = Item;
 
 Item.belongsTo(Mfg, {foreignKey:'mfg_Id'})
-
 
 

@@ -1,11 +1,13 @@
 require('dotenv').config();
 const db = require('../config/db.config')
+const multer = require('multer')
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model') 
 
 const Role = require('../models/role.model')
 const {Sequelize} = require('sequelize')
 const  userController = require('../controller/user.controller')
+
 
 verifyToken = (req, res, next) => {
     let token = req.headers['x-access-token'];
@@ -292,6 +294,10 @@ authenticateNewPass = (req, res, next) => {
   }
 };
 
+
+
+
+
   const authJwt = {
     
     verifyToken: verifyToken,
@@ -305,8 +311,7 @@ authenticateNewPass = (req, res, next) => {
     onlyActiveUser:onlyActiveUser,
     checkIsVerify:checkIsVerify,
     authenticatePassChange:authenticatePassChange,
-    authenticateNewPass:authenticateNewPass
-   
+    authenticateNewPass:authenticateNewPass,
    
     
   };

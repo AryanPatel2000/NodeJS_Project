@@ -15,8 +15,11 @@ const Order = require('../models/order.model')
 const express = require('express');
 var router = express.Router();
 
+const multer = require('multer')
+const path = require('path')
+const Item = require('../models/item.model')
 
-
+const upload = require('../middleware/upload')
 module.exports = function(app) {
 
 
@@ -39,22 +42,26 @@ module.exports = function(app) {
 
 
     //API for add new item, can be access by Manufacturer or Admin only
-    app.post('/item/add',[
+  
+        app.post('/item/add',
+            [
        
-            authJwt.authenticateJWT,
-            authJwt.checkRoles,
-           // authJwt.onlyActiveUser
-        ], 
-        itemController.addItem) 
+                authJwt.authenticateJWT,
+                authJwt.checkRoles,
+                upload.array('image', [10])
+         
+            ],itemController.addItem, )
 
-
+    
         //API for update item, can be access by Manufacturer or Admin only
-    app.put('/item/updateItem/',[  
+        app.put('/item/updateItem/',
+            [  
 
-            authJwt.authenticateJWT,
-            authJwt.checkRoles,
+                authJwt.authenticateJWT,
+                authJwt.checkRoles,
+                upload.single('image')
 
-        ], itemController.updateItem) 
+            ], itemController.updateItem) 
 
    app.get('/item/getAll/', itemController.getAll) //get all  for item
 
@@ -148,5 +155,9 @@ module.exports = function(app) {
             authJwt.authenticateNewPass 
 
         ],userController.setNewPassword) //set new password
+
+
+
+  
 
 }

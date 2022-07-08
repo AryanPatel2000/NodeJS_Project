@@ -31,7 +31,7 @@ const Mfg = require('./models/mfg.model')
 //     })
 
 
-// Item.sync({force:true})
+// Item.sync({alter:true})
 //     .then( () => {
 //         console.log('Resync Db')
 //     })

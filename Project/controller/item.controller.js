@@ -1,4 +1,6 @@
 require('dotenv').config();
+const express = require('express')
+const app = express()
 const {Sequelize, Op, QueryTypes} = require('sequelize')
 const jwt = require('jsonwebtoken');
 const db = require('../config/db.config');
@@ -6,66 +8,67 @@ const Order = require('../models/order.model');
 const Item = require('../models/item.model');
 const User = require('../models/user.model');
 
+const multer = require('multer')
+const path = require('path');
+
 
 module.exports.addItem = (req, res, next) => {
-       
-        try{
 
-            Item.create({
-                        itemName:req.body.itemName,
-                        mfg_date:req.body.mfg_date,
-                        exp_date:req.body.exp_date,
-                        price:req.body.price,
-                        mfg_Id:req.body.mfg_Id,
-                })  
-            .then( (item) => {
-                if(item)
-                
-                 return res.status(200).send({status:'Success', message:`Item successfull inserted with id: ${item.itemId}`, res:item})
-    
-            })
-            .catch( (err)=> {
-                res.status(500).send({status:'Failed!', message: err.message})
-            } )
+    try{
+        Item.create({
+
+            itemName:req.body.itemName,
+            mfg_date:req.body.mfg_date,
+            exp_date:req.body.exp_date,
+            price:req.body.price,
+            mfg_Id:req.body.mfg_Id,
+            image: req.files.path
            
-    
-        }catch(err)
-        {
+        })  
+    .then( (item) => {
+         if(item)
+            { 
+                return res.status(200).send({
+                    status:'Success', 
+                    message:`Item successfull inserted with id: ${item.itemId}`, res:item
+                })
+            }
+
+        })
+        .catch( (err) => {
+
             console.log(err)
-            return res.status(500).send({status:'Failed!', message: err.message})
-            
-        }
-    
-    
+            res.status(400).send({
+                status:'Failed',
+                message:'Error Occured',
+                error: err.message
+            })
+        })
+    }
+    catch(err)
+    {
+        console.log(err)
+        res.status(400).send({status:false, message:'Something went wrong', error:err.message})
+    }
+         
 
 }
 
 module.exports.updateItem = async(req, res, next) => {
 
     try {
-             
-        let item = await Item.findByPk(req.query.itemId);
- 
-
-        if (!item) {
-            
-            return res.status(404).send({
-                status:'Failed!',
-                message: "Item not found with id = " + req.query.itemId,
-           
-            });
-        } else {
-            
+       
             let updatedObject = {
              
                 itemName : req.body.itemName, 
                 mfg_date : req.body.mfg_date, 
                 exp_date: req.body.exp_date,
                 price: req.body.price, 
-                mfg_Id: req.body.mfg_Id
+                mfg_Id: req.body.mfg_Id,
+                image: req.file.path
             }
             
-            let result = await Item.update(updatedObject, { where: { itemId: req.query.itemId } });
+            let result =  Item.update(updatedObject, { where: { itemId: req.query.itemId } });
 
           
             if (!result) {
@@ -82,9 +85,9 @@ module.exports.updateItem = async(req, res, next) => {
                 message: "Item updated successfully with itemId : " + req.query.itemId,
                 
             });
-        }
-
-    } catch (error) {
+             
+   
+    } catch(error) {
 
         console.log(error)
         res.status(500).send({
@@ -329,37 +332,5 @@ module.exports.deleteItemByAdmin = async(req, res, next) => {
 
         }
     });
-
-
-    //====================Delete Item=====================================
-    // const id = req.params.id;
-    // console.log('itemId: ',id)
-    // try{
-    //     Item.destroy({
-
-    //         where:{ itemId: id }
-        
-    //       }).then( (deleted) => {
-
-    //             if(deleted)
-    //             {
-    //                 return res.status(200).send({ message: 'Item deleted successfully with id = ' + id });
-    //             }
-    //             else{
-    //                 return res.status(500).send({status:'Failed!', message: `Item not found or invalid id ${id}` });
-    //             }   
-                    
-
-    //         })
-    //         .catch(err => {
-
-    //             res.status(500).send({status:'Failed!', message: "Item not found ",error: err.message});
-    //         })
-    // }
-    // catch(err)
-    // {
-    //     console.log(err);
-    //     res.status(500).send({status:'Failed!', message: "Error occuring while deliting item ",error: err.message});
-    // }
-    
-    }
+  
+}
