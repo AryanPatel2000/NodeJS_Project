@@ -131,15 +131,12 @@ module.exports.verifyOtp = async(req, res, next) => {
             
              console.log('After varifying OTP: isVarify: : ',otp_instance.isVarify)
 
-              //Check if OTP is expired or not
-             // if (dates.compare(otp_instance.expiration_time, currentdate)==1){
-    
-                  //Check if OTP is equal to the OTP in the DB
+              
 
                   if(otp==otp_instance.OTP){
 
                     
-                      // Mark OTP as verified or used
+                     
                       otp_instance.isVarify=true
                       console.log("After varifying OTP: isVarify: ",otp_instance.isVarify)
                       otp_instance.save()
@@ -157,11 +154,7 @@ module.exports.verifyOtp = async(req, res, next) => {
                     })
                       
                   }   
-            //   }
-            //   else{
-            //       const response={"Status":"Failure","Details":"OTP Expired"}
-            //       return res.status(400).send(response) 
-            //   }
+         
           }
           else{
                     return res.status(400).send({
@@ -245,25 +238,35 @@ module.exports.findByPk = (req, res) => {
 
 module.exports.update = async(req, res) => {
 
-
     try{
        const id = req.params.userId;
+       console.log('Userid: ', id)
            
-               await  User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city, role: req.body.role} , 
-                        {where : {userId: req.params.userId}},
+               await User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city, role: req.body.role} , 
+                        {where : {userId: id}},
                        
                     ) 
                     .then( (user) => {
                        
                         if(user)
                         {
-                            return res.status(200).send({status:'Success', message: 'user updated successfully with id = ' + id });
+                          //  console.log(user)
+                          return res.status(200).send({status:'Success', message: 'user updated successfully with id = ' + id });                        
+                           
                         }
-                        else
-                        {
-                            return res.status(500).send({status: 'Failed', message: 'User id not found'})
+                        else{
+                            return res.status(400).send({status: 'Failed', message: 'User id not found'})
                         }
+                       
+                        
                              
+                    })
+                    .catch((err) => {
+                        return res.status(500).send({
+                            status: 'Failed', 
+                            message: 'User id not found',
+                            error:err.message
+                        })
                     })
 
     }
@@ -274,33 +277,35 @@ module.exports.update = async(req, res) => {
 
 }
 
-module.exports.updateByToken = (req, res) => {
+module.exports.updateByToken = async(req, res) => {
 
-    let token = req.headers['x-access-token'];
-
-    if(!token){
-        return res.status(403).send({message:'No token provided...'})
-    }
-
-    jwt.verify(token, process.env.secret, (err, decoded) => {
-        if(err){
-            console.log(err);
-            return res.status(401).send({message: 'Invalid Token!'});
-        }
-
-        req.userId = decoded.id;
-    })
-    const id = req.userId;
-    User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city ,role: req.body.role} , 
-        {where : {userId: req.userId}}
-        )
-        .then( () => {
-            res.status(200).send({ message: 'user updated successfully with id = ' + id });
-        })
-        .catch(err => {
-            console.log(err)
-            res.status(500).send({error:true, message:err})
-        });
+    try{
+        const id = req.query.userId;
+        console.log('userId: ', id )
+            
+                await User.update({email : req.body.email, firstName : req.body.firstName, lastName: req.body.lastName, city: req.body.city, role: req.body.role} , 
+                         {where : {userId: req.query.userId}},
+                        
+                     ) 
+                     .then( (user) => {
+                        
+                         if(user)
+                         {
+                             return res.status(200).send({status:'Success', message: 'user updated successfully with id = ' + id });
+                         }
+                         else
+                         {
+                             return res.status(500).send({status: 'Failed', message: 'User id not found'})
+                         }
+                              
+                     })
+ 
+     }
+     catch( err )
+     {
+         res.status(500).send({status:'Failed', message:'Error occuring while updating records'})
+     }
+ 
  
 
 }
@@ -330,29 +335,22 @@ module.exports.delete = (req, res) => {
 
 module.exports.deleteByToken = (req, res) => {
 
-    let token = req.headers['x-access-token'];
-
-    if(!token){
-        return res.status(403).send({message:'No token provided...'})
-    }
-
-    jwt.verify(token, process.env.secret, (err, decoded) => {
-        if(err){
-            console.log(err);
-            return res.status(401).send({message: 'Invalid Token!'});
-        }
-
-        req.userId = decoded.id;
-    })
-    const id = req.userId;
-    User.destroy({where: {id:id}})
-    .then( () => {
+    const id = req.query.userId;
+    User.destroy({where: {userId:id}})
+    .then( (user) => {
       
-        res.status(200).send({ message: 'user deleted successfully with id = ' + id });
+        if(user)
+        {
+           return res.status(200).send({status:true, message: 'user deleted successfully with id = ' + id });
+        }
+        else{
+            res.status(400).send({status:false, message: 'Id not found',})
+        }   
+      
     })
     .catch(err => {
         console.log(err)
-        res.status(500).send({message: 'Id not found', error:err})
+        res.status(400).send({status:false, message: 'Error occuring', error:err.message})
     });
  
 
@@ -417,7 +415,10 @@ module.exports.getAllwithAuth = (req, res) => {
 
             res.status(200).send({ message: 'user found', res:user });
            
-            })        
+            }) 
+        .catch( (err) => {
+            res.status(400).send({status:false, message:'user not found'})
+        })       
     }
     catch(err)
     {

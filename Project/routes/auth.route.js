@@ -37,32 +37,25 @@ module.exports = function(app) {
       userController.signIn);
 
 
-    app.get("/user/all", rolleController.allAccess);
-
+ 
     app.get(
       "/api/test/admin",
-      [authJwt.verifyToken, authJwt.isAdmin],
+      [authJwt.authenticateJWT, authJwt.onlyAdmin],
       rolleController.adminBoard
     );
 
-
-    // app.get(
-    //   '/order/showAllOrder',
-    //   [authJwt.verifyToken, authJwt.isAdmin],
-    //   rolleController.showOrderToAdmin
-    // )
 
 
     app.get(
       
       "/api/test/customer",
-      [authJwt.verifyToken, authJwt.isAdmin],
+      [authJwt.authenticateJWT, authJwt.onlyAdmin],
       rolleController.customerBoard
     );
 
     app.get(
       "/api/test/mfg",
-      [authJwt.verifyToken, authJwt.isManufacturer],
+      [authJwt.authenticateJWT, authJwt.onlyAdmin ],
       rolleController.manufacturerBoard
     );
 
@@ -70,14 +63,14 @@ module.exports = function(app) {
     app.get(
 
       '/order/mfg',
-      [authJwt.verifyToken, authJwt.isManufacturer],
+      [authJwt.authenticateJWT, authJwt.onlyAdmin],
       rolleController.manufacturerBoard
     )
 
     app.get(
       
       '/order/ownOrder',
-      [authJwt.verifyToken, authJwt.isCustomer],
+      [authJwt.authenticateJWT],
       rolleController.customerBoard
     )
   };

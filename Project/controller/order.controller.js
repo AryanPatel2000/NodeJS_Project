@@ -8,7 +8,8 @@ const Role = require('../models/role.model')
 const authJwt = require('../middleware/auth')
 const { sequelize, QueryTypes } = require('sequelize');
 
-const randomNumber = require('../helper/random')
+const randomNumber = require('../helper/random');
+const Mfg = require('../models/mfg.model');
 
 module.exports.createOrder = async(req, res, next) => {
 
@@ -72,34 +73,45 @@ module.exports.viewMyOrders = async(req, res, next) => {
 
     try{
        
-        //Order.findAll({ where: req.query})
-        Order.findAll({where: req.authorization})
+        const odd =  await Order.findAll({where: req.query})
         .then(order => {
 
-           res.status(200).json({
-                    message: `Successfully Get  Order`,
+            if(order)
+            {
+                return res.status(200).json({
+                    message: `Successfully Get Order`,
                     Total_order: order.length,
                     orders: order,
                         
-                });        
+                });      
+            }
+            else{
+                return res.status(400).json({
+                    message: `Order not found`,
+                          
+                });   
+            }
+            
            
         })
         .catch(error => {
             console.log(error)
-            res.status(500).json({message:`not found` , error: error });
+            res.status(500).json({message:`not found` , error: error.message });
         });
     }
     catch(err)
     {
-        res.status(500).send({message:"Something went wrong", error:err})
+        res.status(500).send({message:"Something went wrong", error:err.message})
     }
-
 
 }
 
 module.exports.showAllOrders = (req, res) => {
 
-  
+
+    const id = req.user
+    console.log(id)
+
     try{
        
         Order.findAll({ include:[ {model:User}] })
@@ -124,9 +136,45 @@ module.exports.showAllOrders = (req, res) => {
         res.status(500).send({message:"Something went wrong", error:err})
     }
 
+}
 
+
+module.exports.showAllOrdersToMfg = (req, res) => {
+
+
+    const id = req.user
+    console.log(id)
+
+    try{
+       
+        if(req.user.role == 'Manufacturer')
+        {
+            Mfg.findAll( {where:{ userId : req.user.userId}},{ include:[ {model:User}] })
+
+            .then(order => {
+    
+               res.status(200).json({
+                        message: "All orders " ,
+                        Total_order: order.length,
+                        orders: order,
+                            
+                    });        
+               
+            })
+            .catch(error => {
+                console.log(error)
+                res.status(500).json({message:`Order not found` , error: error.message });
+            });
+        }
+
+    }
+    catch(err)
+    {
+        res.status(500).send({message:"Something went wrong", error:err})
+    }
 
 }
+
 
 module.exports.updateOrderStatus = async(req, res, next) => {
 

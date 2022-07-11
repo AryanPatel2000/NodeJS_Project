@@ -24,21 +24,35 @@ module.exports = function(app) {
 
 
 
-    app.get('/user/all',[verifyRole.verifyToken], userController.findAll)
+    app.get('/user/all',[authJwt.authenticateJWT], userController.findAll)
  
 
     app.get('/user/find/:userId', userController.findByPk)
     app.put('/user/update/:userId', userController.update)
 
     
-    app.put('/user/updateByToken/', userController.updateByToken)  //Update using token
+    app.put('/user/updateByToken',
+            [
+                authJwt.validateUser,
 
-   app.get('/user/getAllWithAuth',[authJwt.verifyToken], userController.getAllwithAuth) //Get users list (with authentication)
+            ], userController.updateByToken)  //Update using token
+
+   app.get('/user/getAllWithAuth',
+                [
+                    authJwt.authenticateJWT,
+                    authJwt.onlyAdmin
+                
+                ], userController.getAllwithAuth) //Get users list (with authentication)
  
 
    app.delete('/user/delete/:userId', userController.delete)
 
-   app.delete('/user/deleteByToken/', userController.deleteByToken) //Delete using token
+   app.delete('/user/deleteByToken/', 
+            [
+
+                authJwt.validateUser,
+
+            ] ,userController.deleteByToken) //Delete using token
 
 
     //API for add new item, can be access by Manufacturer or Admin only
@@ -80,15 +94,30 @@ module.exports = function(app) {
          orderController.createOrder) // create Order
 
 
-  app.get('/order/viewMyOrders' ,[authJwt.authenticateJWT],  orderController.viewMyOrders) // view my orders using auth 
+  app.get('/order/viewMyOrders' ,
+            [
+               // authJwt.authenticateJWT,
+                authJwt.validateUser
+           
+            ], orderController.viewMyOrders) // view my orders using auth 
 
     
 
-  // app.get('/order/showAllOrder',[authJwt.verifyToken], orderController.showAllOrders) // show all order
-   //app.get('/order/showAllOrder',[authJwt.verifyToken], orderController.showAllOrders) // show all order
-
   
-  app.get('/order/showAllOrder',[authJwt.authenticateJWT, authJwt.onlyAdmin], orderController.showAllOrders)
+  app.get('/order/showAllOrder',
+                [
+                    authJwt.authenticateJWT, 
+                   // authJwt.onlyAdmin,showAllOrdersToMfg
+                                  
+                ], orderController.showAllOrders)
+
+    
+    app.get('/order/showAllOrder/mfg',
+                [
+                    authJwt.authenticateJWT, 
+                   // authJwt.onlyAdmin,
+                                  
+                ], orderController.showAllOrdersToMfg)
 
   
     app.put('/order/update/status', 
@@ -127,6 +156,7 @@ module.exports = function(app) {
             authJwt.onlyAdmin,
         ], userController.showOnlyAdmin)
    
+
 
 
     

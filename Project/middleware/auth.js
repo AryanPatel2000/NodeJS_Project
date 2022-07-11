@@ -3,6 +3,7 @@ const db = require('../config/db.config')
 const multer = require('multer')
 const jwt = require('jsonwebtoken');
 const User = require('../models/user.model') 
+const Order = require('../models/order.model')
 
 const Role = require('../models/role.model')
 const {Sequelize} = require('sequelize')
@@ -27,72 +28,6 @@ verifyToken = (req, res, next) => {
         next();
     })
 }
-
-
-
-
-isAdmin = async(req, res, next) => {
-    
-   User.findByPk(1)
-   .then((admin) => {
-          console.log(admin)
-       admin.getRoles()
-      .then(roles => {
-
-        for (let i = 0; i < roles.length; i++)
-         {
-          if (roles[i].name === "Admin")
-           {
-                next();
-                return;
-           }
-        }
-        res.status(403).send({
-          message: "Require Admin Role!"
-        });
-        return;
-      });
-    });
-  };
-
-  
-  isManufacturer = (req, res, next) => {
-    //User.findByPk(req.userId)
-    User.findByPk(2)
-    .then(user => {
-      user.getRoles().then(roles => {
-        for (let i = 0; i < roles.length; i++) {
-          if (roles[i].name === "Manufacturer") {
-            next();
-            return;
-          }
-        }
-        res.status(403).send({
-          message: "Require Manufacturer Role!"
-        });
-      });
-    });
-  };
-  
-
-  isCustomer = (req, res, next) => {
-    //User.findByPk(req.userId)
-    User.findByPk(4)
-    .then(user => {
-      user.getRoles().then(roles => {
-        for (let i = 0; i < roles.length; i++) {
-          if (roles[i].name === "Customer") 
-          {
-            next();
-            return;
-          }
-        }
-        res.status(403).send({
-          message: "Require any Role!"
-        });
-      });
-    });
-  };
 
   checkRoles = async(req, res, next) => {
      
@@ -148,7 +83,10 @@ onlyActiveUser = async(req, res, next) => {
           if(user.status === 'inActive')
           {
         
-            return res.status(401).send({status:'Failed!',message:"You can not login because your account is not active"})
+            return res.status(401).send({
+              status:'Failed!',
+              message:"You can not login because your account is not active"
+            })
             
           }
           else{
@@ -279,7 +217,7 @@ authenticateNewPass = (req, res, next) => {
           {
             return res.status(403).send({
                 status:'Failed!',  
-                message:'You are not valid user to change password'
+                message:'You are not valid user '
               });
 
           }else{
@@ -295,15 +233,47 @@ authenticateNewPass = (req, res, next) => {
 };
 
 
+validateUser = (req, res, next) => {
 
+  const authHeader = req.headers.authorization;
+
+  if (authHeader) {
+      const token = authHeader.split(' ')[1];
+
+      jwt.verify(token, process.env.secret, (err, user) => {
+        
+          if (err) {
+            console.log(err)
+             return res.status(403).send({message:'Not valid token'});
+          }
+            console.log(user)
+          
+           
+          if(req.query.userId != user.userId)
+          {
+            
+            return res.status(403).send({
+                status:'Failed!',  
+                message:'You are not valid user'
+              
+              });
+
+          }else{
+            next()
+          }
+         
+          console.log(user)
+         
+      });
+  } else {
+    return res.status(403).send({message:'No token provided..'});
+  }
+};
 
 
   const authJwt = {
     
     verifyToken: verifyToken,
-    isAdmin: isAdmin,
-    isManufacturer: isManufacturer,
-    isCustomer:isCustomer,
     checkRoles:checkRoles,
     UpdateOrderStatusforCustomer:UpdateOrderStatusforCustomer,
     authenticateJWT:authenticateJWT ,
@@ -312,7 +282,7 @@ authenticateNewPass = (req, res, next) => {
     checkIsVerify:checkIsVerify,
     authenticatePassChange:authenticatePassChange,
     authenticateNewPass:authenticateNewPass,
-   
+    validateUser:validateUser,  
     
   };
 
