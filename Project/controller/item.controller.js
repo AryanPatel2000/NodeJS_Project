@@ -22,7 +22,7 @@ module.exports.addItem = (req, res, next) => {
             exp_date:req.body.exp_date,
             price:req.body.price,
             mfg_Id:req.body.mfg_Id,
-            image: req.files.path
+            image: req.file.path
            
         })  
     .then( (item) => {
@@ -100,34 +100,168 @@ module.exports.updateItem = async(req, res, next) => {
 
 }
 
-module.exports.getAll = (req, res) => {
+module.exports.getAll = async(req, res) => {
+
 
     try{
-        Item.findAndCountAll({
+        const page = parseInt(req.query.page)  ;
+        const limit = parseInt(req.query.limit) ;
 
-            where: {
-                mfg_Id: {
-                    [Op.eq]: 2
+        const offset = page ? page * limit : 0 ;
+        let dateSorting = (req.query.dateSorting === 'true')
+      
+        let desc = (req.query.desc === 'true');
+              
+        
+        let result = {};   
+
+                
+                if( req.query.itemId || req.query.itemName || req.query.mfg_date || req.query.exp_date || req.query.price )
+                {
+                   // console.log('Query: ',req.query.itemId || req.query.itemName)
+                     result =  await Item.findAndCountAll({
+                         where : {
+                            [Op.or]: {
+                                itemId: {
+                                    [Op.like]: req.query.itemId,
+
+                                },
+                                itemName: {
+                                    [Op.like]: req.query.itemName,
+                                },
+                                mfg_date: {
+                                    [Op.like]: req.query.mfg_date,
+                                },
+                                exp_date: {
+                                    [Op.like]: req.query.exp_date,
+                                },
+                                price: {
+                                    [Op.like]: req.query.price,
+                                }
+                            }
+                      },
+                      attributes:{exclude:['image']}
+                    
+                    })
+                   
                 }
-            }
-        })
-        .then(item => {
-           
-            res.status(200).send({status:'Success',message:'Items whose mfg_Id : 2', res:item})
-            console.log("Items whose mfg_Id : 2", JSON.stringify(item, null, 3))          
-        })
-        .catch(err => {
+              else if(dateSorting == false && desc == false){
+                                     
 
-            res.status(500).send({status:'Failed!', message:'Item not found', error:err})
-             
-        })
+                    result = await Item.findAndCountAll({
+                        attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                        limit : limit ,
+                        offset: offset,  
+                      });
 
-       
-    }
-    catch(err)
-    {
-        res.status(500).send({status:'Failed!', message:'Error ocuuring while fetching records'})
-    }
+                      return res.send({status:'Success..',message:'With no sorting',res:result})
+                } 
+                else if(dateSorting == true && desc ==false)
+                    {
+                        result = await Item.findAndCountAll({
+                            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                             
+                            order: [
+                                ['exp_date', 'ASC']
+                            ],
+                            limit : limit ,
+                            offset: offset,              
+                        });
+                        return res.send({status:'Success..',message:'Sorting exp_date with Ascending order',res:result})
+
+                    }
+                    else if(dateSorting == true && desc ==true)
+                    {
+                        result = await Item.findAndCountAll({
+                            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                
+                            order: [
+                                ['exp_date', 'DESC']
+                            ],
+                            limit : limit ,
+                            offset: offset,             
+                        });
+                        return res.send({status:'Success..',message:'Sorting exp_date with Descending order',res:result})
+
+                    }
+                    else if(desc == true)
+                    {
+                        result = await Item.findAndCountAll({
+                            attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
+                
+                            order: [
+                                ['exp_date', 'DESC']
+                            ],
+                            limit : limit ,
+                            offset: offset,              
+                        });
+                       
+                    }
+         
+                else {
+
+                    
+                    result = await Item.findAndCountAll({
+
+                        where: {
+                            itemId: {
+                                [Op.eq]: req.query.itemId,
+                            },
+                                
+                        },
+                        attributes: { 
+
+                            exclude:['image'],
+                            limit : limit ,
+                            offset: offset,
+
+                        }
+                    })
+                    .then(results => {
+                    
+                        if(!results)
+                        {
+                            return res.status(500).send({status:'Failed!', message:'Item not found', })
+                        }
+                        else
+                        {
+                            return res.status(200).send({status:'Success',message:`item found `, res:results})
+                        }
+                   
+                    // console.log("Items: ", JSON.stringify(item, null, 3))          
+                    })
+                    .catch(err => {
+                         console.log(err);
+                        res.status(500).send({status:'Failed!', message:'Item not found', error:err.message})
+                        
+                    })
+                            
+                  
+                  }
+
+        const totalPages = Math.ceil(result.count / limit);
+
+        console.log("Total pages: ", totalPages)
+  
+        const response = {
+          "totalPages": totalPages,
+          "pageSize": result.rows.length,
+          "Items": result.rows
+        };
+
+        res.status(200).send({status:'Success',res:response});
+        
+
+      }catch(error) {
+          console.log(error)
+            res.status(500).send({
+                    message: "Can NOT complete request!",
+                    error: error.message,
+                });
+      }      
+   
+                            
+
 }
 
 module.exports.filterAndSearch = async(req, res) => {
@@ -142,17 +276,23 @@ module.exports.filterAndSearch = async(req, res) => {
           })
             .then(results => {
   
-                res.status(200).send({status:'Success', message: `Record found`, totalItems: results.length, res: results});                            
-                console.log('Records found: ', JSON.stringify(results,null, 2))
+                res.status(200).send({
+
+                    status:'Success', 
+                    message: `Record found`, 
+                    totalItems: results.length, 
+                    res: results
+                });                            
+               // console.log('Records found: ', JSON.stringify(results,null, 2))
             })
             .catch(error => {
               console.log(error);
-              res.status(500).send({ message: "Error occuring while fetching records!",error: error });
+              res.status(500).send({ message: "Error occuring while fetching records!",error: error.message });
             });
       }
       catch( error)
       {
-        res.status(500).send({ message: "Error", error: error });
+        res.status(500).send({ message: "Error", error:  error.message });
         
       }
 
@@ -168,16 +308,17 @@ module.exports.itemPagination = async(req, res) => {
    
     if(!limit || limit === undefined )
     {
+
         
         let result = await Item.findAndCountAll({
             attributes: ['itemId', 'itemName', 'mfg_date', 'exp_date', 'price', 'mfg_id',],
-            limit: 5 ,    
+            limit: 10 ,    
             offset: 0  , 
 
         })   
         
 
-        const totalPages = Math.ceil(result.count / 5);
+        const totalPages = Math.ceil(result.count / 10);
 
        // console.log("Total pages: ", totalPages)
 
@@ -220,7 +361,6 @@ module.exports.itemPagination = async(req, res) => {
 
 
 module.exports.sortExpDate = async(req, res) => {
-
 
     try{
       

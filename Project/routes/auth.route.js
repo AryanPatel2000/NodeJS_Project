@@ -37,40 +37,5 @@ module.exports = function(app) {
       userController.signIn);
 
 
- 
-    app.get(
-      "/api/test/admin",
-      [authJwt.authenticateJWT, authJwt.onlyAdmin],
-      rolleController.adminBoard
-    );
 
-
-
-    app.get(
-      
-      "/api/test/customer",
-      [authJwt.authenticateJWT, authJwt.onlyAdmin],
-      rolleController.customerBoard
-    );
-
-    app.get(
-      "/api/test/mfg",
-      [authJwt.authenticateJWT, authJwt.onlyAdmin ],
-      rolleController.manufacturerBoard
-    );
-
-
-    app.get(
-
-      '/order/mfg',
-      [authJwt.authenticateJWT, authJwt.onlyAdmin],
-      rolleController.manufacturerBoard
-    )
-
-    app.get(
-      
-      '/order/ownOrder',
-      [authJwt.authenticateJWT],
-      rolleController.customerBoard
-    )
   };

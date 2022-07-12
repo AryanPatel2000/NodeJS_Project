@@ -6,7 +6,7 @@ const Item = require('../models/item.model')
 const User = require('../models/user.model')
 const Role = require('../models/role.model')
 const authJwt = require('../middleware/auth')
-const { sequelize, QueryTypes } = require('sequelize');
+const { Sequelize, QueryTypes } = require('sequelize');
 
 const randomNumber = require('../helper/random');
 const Mfg = require('../models/mfg.model');
@@ -62,10 +62,7 @@ module.exports.createOrder = async(req, res, next) => {
         //console.log(err)
         return res.status(500).send({Order:'Failed!', message:'Something went wrong while placing order', error:err.message})
     }
-
-
-    
-    
+      
 }
 
 
@@ -101,6 +98,7 @@ module.exports.viewMyOrders = async(req, res, next) => {
     }
     catch(err)
     {
+        console.log(err)
         res.status(500).send({message:"Something went wrong", error:err.message})
     }
 
@@ -114,7 +112,7 @@ module.exports.showAllOrders = (req, res) => {
 
     try{
        
-        Order.findAll({ include:[ {model:User}] })
+        Order.findAll({ })
 
         .then(order => {
 
@@ -140,7 +138,6 @@ module.exports.showAllOrders = (req, res) => {
 
 
 module.exports.showAllOrdersToMfg = (req, res) => {
-
 
     const id = req.user
     console.log(id)
@@ -305,44 +302,88 @@ module.exports.updateOrderStatusByCustomer = async(req, res, next) => {
     
 }
 
-
-
 module.exports.generateInvoice = async(req, res, next) => {
 
-    const userId = req.query
-    const secret_key = process.env.secret_key;
-    const stripe = require('stripe')(secret_key);
 
-    await Order.findAll(
-    { 
-        include: [   
-            {           
-                model: Item,
-                                     
-            },
+   const orders =  await Order.findAll(
+        { 
+            include: [   
+                {           
+                    model: Item,
+                    attributes: {exclude: ['image', ]},
+                                         
+                },
+                {
+                    model: User,
+                    attributes: {exclude: ['userId','email', 'firstName', 'lastName', 'city','password','role', 'createdAt', 'updatedAt',  'status', 'isVarify','OTP', 'expireOtpTime',  ]},
+                    where: req.query,
+    
+                }
+            ]
+
+            
+          }
+        )
+
+        const ordere = await Order.findAll({
+            attributes:{  
+                  include : [
+    
+                    [Sequelize.fn('SUM', Sequelize.col('Item.price')), 'Total_amount'],
+                                      
+                  ],
+                  exclude: ['orderId','orderNumber', 'orderDate', 'userId',  'itemId', 'status',  ],
+                  
+                },
+                include:[ 
+
+                    {
+                        model:Item,
+                        attributes: {exclude: ['itemId','itemName', 'mfg_date', 'exp_date', 'price', 'mfg_Id','image' ]},
+                    },
+
+
+                    {
+                        model: User,
+                        attributes: {exclude: ['password','role', 'createdAt', 'updatedAt',  'status', 'isVarify','OTP', 'expireOtpTime',  ],},
+                        where: req.query
+                     }
+                ]
+              
+        } )
+
+        .then( (ordere) => {
+
+            if(!ordere)
             {
-                model: User,
-                where: req.query,
+                console.log(!ordere)
+                return res.status(400).send({
+                  status:false,
+                  message:'Order not found',
 
+              })  
             }
-        ]
-      }
-    )
+            else{
+                return res.status(200).send({
 
-    .then(order => {
+                    message: "Your order" ,
+                    Total_order: orders.length,
+                    orders: orders,
+                    totalAmount: ordere,
+                        
+                });
+            }
+            
+        })
+        .catch( (err) => {
+            console.log(err);
+            return res.status(400).send({
+                status:false,
+                message:'Order not found',
 
-       res.status(200).json({
-                message: "orders " ,
-                totalAmount: req.price,
-                Total_order: order.length,
-                orders: order,
-                    
-            });        
-       
-    })
-    .catch(error => {
-        console.log(error)
-        res.status(500).json({message:`Order not found` , error: error });
-    });
-
+            }) 
+        })
+         
+                
+ 
 }

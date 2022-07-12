@@ -62,7 +62,7 @@ module.exports = function(app) {
        
                 authJwt.authenticateJWT,
                 authJwt.checkRoles,
-                upload.array('image', [10])
+                upload.single('image')
          
             ],itemController.addItem, )
 
@@ -77,7 +77,7 @@ module.exports = function(app) {
 
             ], itemController.updateItem) 
 
-   app.get('/item/getAll/', itemController.getAll) //get all  for item
+   app.get('/item/getAll/', itemController.getAll) //getAll  for item of dateSorting and filter and search
 
    app.get('/item/filterAndSearch', itemController.filterAndSearch) // filter and search
 

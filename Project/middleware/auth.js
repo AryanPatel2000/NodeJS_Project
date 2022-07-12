@@ -254,6 +254,7 @@ validateUser = (req, res, next) => {
             
             return res.status(403).send({
                 status:'Failed!',  
+
                 message:'You are not valid user'
               
               });
