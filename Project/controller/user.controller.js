@@ -18,29 +18,35 @@ module.exports.signUp = async(req, res) => {
 
 
     // To add minutes to the current time
-    function AddMinutesToDate(date, minutes) {
+    function AddMinutesToTime(date, minutes) {
     
         console.log('Time: ', date.getHours() ,':', date.getMinutes() ,':', date.getSeconds())
         console.log(date.getTime())
-    return new Date(date.getTime() + minutes * 50000);
+      
+       return new Date(date.getTime() + minutes*60000);
+      
+       
+       
 
-}
+    }
 
   const now = new Date()
-  console.log('Time: ', `${now.getHours()} : ${now.getMinutes()} : ${now.getSeconds()}` , )
+ 
 
     User.findOne({
         where: {
                 email: req.body.email
             }
-        }).then( email => {
+        })
+        .then( email => {
         if(email)
         {
             res.status(400).send({message: "Email is already in use!",})
         }
         else{
-        
-         
+            
+            const expiration_time = AddMinutesToTime(now,10); 
+
             User.create({
                 email : req.body.email,
                 firstName: req.body.firstName,
@@ -51,7 +57,7 @@ module.exports.signUp = async(req, res) => {
                 status: req.body.status,
                 isVarify: req.body.isVarify,
                 OTP : generateOtp(),
-                expireOtpTime: AddMinutesToDate( now, 5)
+                expireOtpTime: expiration_time
                
             })
     
@@ -129,7 +135,7 @@ module.exports.verifyOtp = async(req, res, next) => {
           if(otp_instance.isVarify !=true)
           {
             
-             console.log('After varifying OTP: isVarify: : ',otp_instance.isVarify)
+             console.log('Before varifying OTP: isVarify: : ',otp_instance.isVarify)
 
               
 
@@ -447,8 +453,15 @@ module.exports.getAllwithAuth = (req, res) => {
                         { 
                           [Op.gte]: req.query.from,
                           [Op.lte]: req.query.to 
-                        }
-                    }}
+                        },
+
+                       
+                    },
+                   
+                   
+                }, 
+                attributes: {exclude: ['password','role', 'OTP', 'expireOtpTime', 'updatedAt' ]}
+                
                 })
 
                 .then( (user) => {
@@ -487,23 +500,25 @@ module.exports.getAllwithAuth = (req, res) => {
             }
             else if(req.query.from)
             {
-                
+                    
                     const date =  User.findAll({ where: {created_at: {
                         [Op.and]:
                             { 
                               [Op.gte]: req.query.from,
                               [Op.lte]: new DATE()
                             }
-                        }}
+                        }},
+                        attributes: {exclude: ['password','role', 'OTP', 'expireOtpTime', 'updatedAt' ]}
                     })
                     .then( (user) => {
+
                         
                         if(user)
                         {
                             return res.status(200).json({
                                 status:'Success',
                                 message: `Successfully Get  User`,
-                                totalUser:`Total user between date from ${from} to ${to} is: ${user.length}`,
+                                totalUser:`Total user between date from ${from} to current date ${new Date().getDate()} is: ${user.length}`,
                                 User: user,
                                             
                             });  
@@ -519,9 +534,10 @@ module.exports.getAllwithAuth = (req, res) => {
                         [Op.and]:
                             { 
                              
-                              [Op.lte]: req.query.to,
+                              [Op.lt]: req.query.to,
                             }
-                        }}
+                        }},
+                        attributes: {exclude: ['password','role', 'OTP', 'expireOtpTime', 'updatedAt' ]},
                     })
                     .then( (user) => {
                         if(user)
@@ -529,11 +545,27 @@ module.exports.getAllwithAuth = (req, res) => {
                             return res.status(200).json({
                                 status:'Success',
                                 message: `Successfully Get  User`,
-                                totalUser:`Total user between date from ${from} to ${to} is: ${user.length}`,
+                                totalUser:`Total user before date to ${to} is: ${user.length}`,
                                 User: user,
                                             
                             });  
                         }
+                        else{
+                            return res.status(400).send({
+                                status:false,
+                                message: `Error occuring`,
+                                
+                            })
+                        }
+                    })
+                    .catch( (err) => {
+
+                        console.log(err);
+                        return res.status(400).send({
+                            status:false,
+                            message: `Error occuring`,
+                            error: err.message
+                        })
                     })
                                   
             }
@@ -559,11 +591,15 @@ module.exports.getAllwithAuth = (req, res) => {
           })
           .then( async(orderes) => {
            
-            const user = await User.findAll({ attributes : {exclude: ['password']}})
+            const user = await User.findAll({ 
+
+                    attributes : {exclude: ['password', 'OTP', 'expireOtpTime', 'updatedAt', 'createdAt']}
+
+                })
 
                 if(user)
                 {
-                    res.status(200).send({
+                    return res.status(200).send({
                         message:`Total_registered_user ${user.length}`,
                         result:user,
                         Order:`Total order count`,

@@ -315,7 +315,7 @@ module.exports.generateInvoice = async(req, res, next) => {
                 },
                 {
                     model: User,
-                    attributes: {exclude: ['userId','email', 'firstName', 'lastName', 'city','password','role', 'createdAt', 'updatedAt',  'status', 'isVarify','OTP', 'expireOtpTime',  ]},
+                    attributes: [],                  
                     where: req.query,
     
                 }
@@ -332,19 +332,22 @@ module.exports.generateInvoice = async(req, res, next) => {
                     [Sequelize.fn('SUM', Sequelize.col('Item.price')), 'Total_amount'],
                                       
                   ],
-                  exclude: ['orderId','orderNumber', 'orderDate', 'userId',  'itemId', 'status',  ],
                   
+                  exclude: ['orderId','orderNumber', 'orderDate', 'userId',  'itemId', 'status',  ],
+                 
                 },
+                
                 include:[ 
-
                     {
                         model:Item,
-                        attributes: {exclude: ['itemId','itemName', 'mfg_date', 'exp_date', 'price', 'mfg_Id','image' ]},
+                        attributes :[],
+                      
                     },
 
 
                     {
                         model: User,
+                        
                         attributes: {exclude: ['password','role', 'createdAt', 'updatedAt',  'status', 'isVarify','OTP', 'expireOtpTime',  ],},
                         where: req.query
                      }

@@ -73,7 +73,7 @@ module.exports = function(app) {
 
                 authJwt.authenticateJWT,
                 authJwt.checkRoles,
-                upload.single('image')
+                upload.single('image') //upload.array('image', 10)
 
             ], itemController.updateItem) 
 
@@ -96,7 +96,7 @@ module.exports = function(app) {
 
   app.get('/order/viewMyOrders' ,
             [
-               // authJwt.authenticateJWT,
+              
                 authJwt.validateUser
            
             ], orderController.viewMyOrders) // view my orders using auth 

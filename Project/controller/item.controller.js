@@ -65,7 +65,7 @@ module.exports.updateItem = async(req, res, next) => {
                 exp_date: req.body.exp_date,
                 price: req.body.price, 
                 mfg_Id: req.body.mfg_Id,
-                image: req.file.path
+                image: req.file.path    //image: req.files.path  // for storing image path 
             }
             
             let result =  Item.update(updatedObject, { where: { itemId: req.query.itemId } });
@@ -466,8 +466,23 @@ module.exports.deleteItemByAdmin = async(req, res, next) => {
         }
         else{
 
-             Item.destroy({ where:{itemId:req.params.id } });
-           return res.status(200).send({ status: true, message: `Item successfully deleted with itemId: ${req.params.id}`})
+             Item.destroy({ where:{itemId:req.params.id } })
+             .then( (item) => {
+                 if(item)
+                 {
+                    return res.status(200).send({
+                         status: true, 
+                         message: `Item successfully deleted with itemId: ${req.params.id}`
+                        })
+                 }
+                 else{
+                    return res.status(400).send({ 
+                        status: false,
+                        message: `Item not found with itemId: ${req.params.id}`
+                     })
+                 }
+             })
+          
 
 
         }
